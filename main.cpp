@@ -3,9 +3,22 @@
 #include "ray.h"
 #include "color.h"
 
-Color rayColor(const Ray& r) {
-	Vec3 unitDir = normalize(r.dir);
-	auto a = 0.5f * (unitDir.y + 1.0f);
+bool hitSphere(const Point3& center, float radius, const Ray& ray) {
+	Vec3 oc = center - ray.origin;
+	float a = sqrMag(ray.dir);
+	float b = -2.0f * dot(ray.dir, oc);
+	float c = sqrMag(oc) - radius * radius;
+	float discriminant = b * b - 4 * a * c;
+	return (discriminant >= 0);
+}
+
+Color rayColor(const Ray& ray) {
+	if (hitSphere(Point3(0.0f, 0.0f, 1.0f), 0.5f, ray)) {
+		return Color(1.0f, 0.0f, 0.0f);
+	}
+
+	Vec3 unitDir = normalize(ray.dir);
+	float a = 0.5f * (unitDir.y + 1.0f);
 	return (1.0f - a) * Color(1.0f, 1.0f, 1.0f) + a * Color(0.5f, 0.7f, 1.0f);
 }
 
@@ -13,7 +26,7 @@ int main() {
 
 	// Image
 
-	auto aspectRatio = 16.0 / 9.0;
+	float aspectRatio = 16.0f / 9.0f;
 	int imageWidth = 400;
 
 	// Calculate the image height
@@ -22,9 +35,9 @@ int main() {
 
 	//Camera
 
-	auto focalLength = 1.0f;
-	auto viewportHeight = 2.0f;
-	auto viewportWidth = viewportHeight * (static_cast<float>(imageWidth) / imageHeight);
+	float focalLength = 1.0f;
+	float viewportHeight = 2.0f;
+	float viewportWidth = viewportHeight * (static_cast<float>(imageWidth) / imageHeight);
 	auto cameraCenter = Point3(0.0f, 0.0f, 0.0f);
 
 	// Calculate the horizontal and vertical vectors along the viewport edges

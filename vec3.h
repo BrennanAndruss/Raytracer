@@ -56,4 +56,5 @@ Vec3 normalize(const Vec3& a) {
 	if (len != 0.0f) {
 		return a / len;
 	}
+	return a;
 }

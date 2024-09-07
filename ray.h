@@ -8,8 +8,8 @@ struct Ray {
 
 	Ray() : origin(Point3()), dir(Vec3()) {}
 	Ray(const Point3& origin, const Vec3& dir) : origin(origin), dir(dir) {}
-};
 
-Vec3 at(const Ray& r, float t) {
-	return r.origin + t * r.dir;
-}
+	Point3 at(float t) const {
+		return origin + t * dir;
+	}
+};

@@ -3,18 +3,26 @@
 #include "ray.h"
 #include "color.h"
 
-bool hitSphere(const Point3& center, float radius, const Ray& ray) {
+float hitSphere(const Point3& center, float radius, const Ray& ray) {
 	Vec3 oc = center - ray.origin;
 	float a = sqrMag(ray.dir);
 	float b = -2.0f * dot(ray.dir, oc);
 	float c = sqrMag(oc) - radius * radius;
 	float discriminant = b * b - 4 * a * c;
-	return (discriminant >= 0);
+	
+	if (discriminant < 0) {
+		return -1.0f;
+	}
+	else {
+		return (-b - std::sqrt(discriminant)) / (2.0f * a);
+	}
 }
 
 Color rayColor(const Ray& ray) {
-	if (hitSphere(Point3(0.0f, 0.0f, 1.0f), 0.5f, ray)) {
-		return Color(1.0f, 0.0f, 0.0f);
+	auto t = hitSphere(Point3(0.0f, 0.0f, -1.0f), 0.5f, ray);
+	if (t > 0.0f) {
+		Vec3 N = normalize(ray.at(t) - Vec3(0.0f, 0.0f, -1.0f));
+		return 0.5f * Color(N.x + 1.0f, N.y + 1.0f, N.z + 1.0f);
 	}
 
 	Vec3 unitDir = normalize(ray.dir);

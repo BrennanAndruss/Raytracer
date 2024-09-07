@@ -51,9 +51,9 @@ inline float sqrMag(const Vec3& a) {
 	return dot(a, a);
 }
 
-Vec3 normalize(const Vec3& a) {
+inline Vec3 normalize(const Vec3& a) {
 	float len = mag(a);
-	if (len != 0.0f) {
+	if (len > 0.00001f) {
 		return a / len;
 	}
 	return a;

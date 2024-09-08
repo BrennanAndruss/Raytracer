@@ -6,15 +6,15 @@
 float hitSphere(const Point3& center, float radius, const Ray& ray) {
 	Vec3 oc = center - ray.origin;
 	float a = sqrMag(ray.dir);
-	float b = -2.0f * dot(ray.dir, oc);
+	float h = dot(ray.dir, oc);
 	float c = sqrMag(oc) - radius * radius;
-	float discriminant = b * b - 4 * a * c;
+	float discriminant = h * h - a * c;
 	
 	if (discriminant < 0) {
 		return -1.0f;
 	}
 	else {
-		return (-b - std::sqrt(discriminant)) / (2.0f * a);
+		return (h - std::sqrt(discriminant)) / a;
 	}
 }
 

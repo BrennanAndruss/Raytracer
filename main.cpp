@@ -1,28 +1,18 @@
-#include <iostream>
-#include "vec3.h"
-#include "ray.h"
-#include "color.h"
+#include "raytracer.h"
 
-float hitSphere(const Point3& center, float radius, const Ray& ray) {
-	Vec3 oc = center - ray.origin;
-	float a = sqrMag(ray.dir);
-	float h = dot(ray.dir, oc);
-	float c = sqrMag(oc) - radius * radius;
-	float discriminant = h * h - a * c;
-	
-	if (discriminant < 0) {
-		return -1.0f;
-	}
-	else {
-		return (h - std::sqrt(discriminant)) / a;
-	}
-}
+#include "hittable.h"
+#include "hittable_list.h"
+#include "sphere.h"
 
-Color rayColor(const Ray& ray) {
-	auto t = hitSphere(Point3(0.0f, 0.0f, -1.0f), 0.5f, ray);
-	if (t > 0.0f) {
-		Vec3 N = normalize(ray.at(t) - Vec3(0.0f, 0.0f, -1.0f));
-		return 0.5f * Color(N.x + 1.0f, N.y + 1.0f, N.z + 1.0f);
+Color rayColor(const Ray& ray, const Hittable& world) {
+	//auto t = hitSphere(Point3(0.0f, 0.0f, -1.0f), 0.5f, ray);
+	//if (t > 0.0f) {
+	//	Vec3 N = normalize(ray.at(t) - Vec3(0.0f, 0.0f, -1.0f));
+	//	return 0.5f * Color(N.x + 1.0f, N.y + 1.0f, N.z + 1.0f);
+	//}
+	HitRecord record;
+	if (world.hit(ray, 0.0f, infinity, record)) {
+		return 0.5f * (record.normal + Color(1.0f, 1.0f, 1.0f));
 	}
 
 	Vec3 unitDir = normalize(ray.dir);
@@ -40,6 +30,13 @@ int main() {
 	// Calculate the image height
 	int imageHeight = static_cast<int>(imageWidth / aspectRatio);
 	imageHeight = (imageHeight < 1) ? 1 : imageHeight;
+
+	// World
+
+	HittableList world;
+
+	world.add(std::make_shared<Sphere>(Point3(0.0f, 0.0f, -1.0f), 0.5f));
+	world.add(std::make_shared<Sphere>(Point3(0.0f, -100.5f, -1.0f), 100.0f));
 
 	//Camera
 
@@ -72,7 +69,7 @@ int main() {
 			auto rayDir = pixelCenter - cameraCenter;
 			Ray r(cameraCenter, rayDir);
 
-			color pixelColor = rayColor(r);
+			color pixelColor = rayColor(r, world);
 			writeColor(std::cout, pixelColor);
 		}
 	}

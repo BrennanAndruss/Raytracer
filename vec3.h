@@ -9,6 +9,20 @@ struct Vec3 {
 	Vec3 operator-() const {
 		return Vec3(-x, -y, -z);
 	}
+
+	Vec3 operator+=(const Vec3& a) {
+		x += a.x;
+		y += a.y;
+		z += a.z;
+		return *this;
+	}
+
+	Vec3 operator*=(float a) {
+		x *= a;
+		y *= a;
+		z *= a;
+		return *this;
+	}
 };
 
 // Type aliases for Vec3

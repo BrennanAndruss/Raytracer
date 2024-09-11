@@ -6,6 +6,7 @@ class Camera {
 public:
 	float aspectRatio = 1.0f;
 	int imageWidth = 100;
+	int samplesPerPixel = 10;
 
 	void render(const Hittable& world) {
 		initialize();
@@ -15,12 +16,14 @@ public:
 		for (int j = 0; j < imageHeight; j++) {
 			std::clog << "\rScanlines remaining: " << (imageHeight - j) << " " << std::flush;
 			for (int i = 0; i < imageWidth; i++) {
-				auto pixelCenter = pixel00Loc + (i * pixelDeltaU) + (j * pixelDeltaV);
-				auto rayDir = pixelCenter - center;
-				Ray ray(center, rayDir);
+				Color pixelColor(0.0f, 0.0f, 0.0f);
 
-				color pixelColor = rayColor(ray, world);
-				writeColor(std::cout, pixelColor);
+				for (int sample = 0; sample < samplesPerPixel; sample++) {
+					Ray ray = getRay(i, j);
+					pixelColor += rayColor(ray, world);
+				}
+
+				writeColor(std::cout, pixelSamplesScale * pixelColor);
 			}
 		}
 
@@ -29,6 +32,7 @@ public:
 
 private:
 	int imageHeight;
+	float pixelSamplesScale;	// Color scale factor for a sum of pixel samples
 	Point3 center;
 	Point3 pixel00Loc;
 	Vec3 pixelDeltaU;
@@ -37,6 +41,8 @@ private:
 	void initialize() {
 		imageHeight = static_cast<int>(imageWidth / aspectRatio);
 		imageHeight = (imageHeight < 1) ? 1 : imageHeight;
+
+		pixelSamplesScale = 1.0f / samplesPerPixel;
 
 		center = Point3(0.0f, 0.0f, 0.0f);
 
@@ -57,6 +63,24 @@ private:
 		auto viewportUpperLeft =
 			center - Vec3(0.0f, 0.0f, focalLength) - viewportU / 2.0f - viewportV / 2.0f;
 		pixel00Loc = viewportUpperLeft + 0.5f * (pixelDeltaU + pixelDeltaV);
+	}
+
+	Ray getRay(int i, int j) const {
+		// Construct a camera ray originating from the origin and driected at randomly sampled 
+		// point around the pixel location i, j
+
+		Vec3 offset = sampleSquare();
+		Point3 pixelSample = pixel00Loc + (i + offset.x) * pixelDeltaU + (j + offset.y) * pixelDeltaV;
+
+		Point3 rayOrigin = center;
+		Vec3 rayDir = pixelSample - rayOrigin;
+
+		return Ray(rayOrigin, rayDir);
+	}
+
+	Vec3 sampleSquare() const {
+		// Returns the vector to a random point in the [-.5, -.5]-[+.5, +.5] square
+		return Vec3(randomFloat() - 0.5f, randomFloat() - 0.5f, 0.0f);
 	}
 
 	Color rayColor(const Ray& ray, const Hittable& world) const {

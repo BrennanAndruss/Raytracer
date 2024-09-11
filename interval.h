@@ -9,6 +9,11 @@ struct Interval {
 	float size() const { return max - min; }
 	bool contains(float x) const { return min <= x && x <= max; }
 	bool surrounds(float x) const { return min < x && x < max; }
+	double clamp(float x) const {
+		if (x < min) return min;
+		if (x > max) return max;
+		return x;
+	}
 
 	static const Interval Empty, Universe;
 };

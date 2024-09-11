@@ -35,7 +35,10 @@ public:
 
 		record.t = root;
 		record.p = ray.at(record.t);
-		record.normal = (record.p - center) / radius;
+
+		// Get the outward unit normal
+		Vec3 outwardNormal = (record.p - center) / radius;
+		record.setFaceNormal(ray, outwardNormal);
 
 		return true;
 	}

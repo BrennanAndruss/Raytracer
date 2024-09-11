@@ -5,12 +5,6 @@
 #include <limits>
 #include <memory>
 
-// Common Headers
-
-#include "color.h"
-#include "ray.h"
-#include "vec3.h"
-
 // Constants
 
 const float infinity = std::numeric_limits<float>::infinity();
@@ -21,3 +15,10 @@ const float pi = 3.1415926535897932385f;
 inline float degreesToRadians(float degrees) {
 	return degrees * pi / 180.0f;
 }
+
+// Common Headers
+
+#include "color.h"
+#include "interval.h"
+#include "ray.h"
+#include "vec3.h"

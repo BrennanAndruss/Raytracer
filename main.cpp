@@ -11,7 +11,7 @@ Color rayColor(const Ray& ray, const Hittable& world) {
 	//	return 0.5f * Color(N.x + 1.0f, N.y + 1.0f, N.z + 1.0f);
 	//}
 	HitRecord record;
-	if (world.hit(ray, 0.0f, infinity, record)) {
+	if (world.hit(ray, Interval(0, infinity), record)) {
 		return 0.5f * (record.normal + Color(1.0f, 1.0f, 1.0f));
 	}
 

@@ -15,13 +15,13 @@ public:
 		objects.push_back(object);
 	}
 
-	bool hit(const Ray& ray, float rayTMin, float rayTMax, HitRecord& record) const override {
+	bool hit(const Ray& ray, Interval rayT, HitRecord& record) const override {
 		HitRecord tempRecord;
 		bool hitAnything = false;
-		float closest = rayTMax;
+		float closest = rayT.max;
 
 		for (const auto& object : objects) {
-			if (object->hit(ray, rayTMin, closest, tempRecord)) {
+			if (object->hit(ray, Interval(rayT.min, closest), tempRecord)) {
 				hitAnything = true;
 				closest = tempRecord.t;
 				record = tempRecord;

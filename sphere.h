@@ -6,6 +6,7 @@ class Sphere : public Hittable {
 private:
 	Point3 center;
 	float radius;
+	std::shared_ptr<Material> mat;
 
 public:
 	Sphere(const Point3& center, float radius)
@@ -39,6 +40,7 @@ public:
 		// Get the outward unit normal
 		Vec3 outwardNormal = (record.p - center) / radius;
 		record.setFaceNormal(ray, outwardNormal);
+		record.material = mat;
 
 		return true;
 	}

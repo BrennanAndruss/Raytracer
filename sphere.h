@@ -9,8 +9,8 @@ private:
 	std::shared_ptr<Material> mat;
 
 public:
-	Sphere(const Point3& center, float radius)
-		: center(center), radius(std::fmax(0.0f, radius)) {}
+	Sphere(const Point3& center, float radius, std::shared_ptr<Material> mat)
+		: center(center), radius(std::fmax(0.0f, radius)), mat(mat) {}
 
 	bool hit(const Ray& ray, Interval rayT, HitRecord& record) const override {
 		Vec3 oc = center - ray.origin;
@@ -40,7 +40,7 @@ public:
 		// Get the outward unit normal
 		Vec3 outwardNormal = (record.p - center) / radius;
 		record.setFaceNormal(ray, outwardNormal);
-		record.material = mat;
+		record.mat = mat;
 
 		return true;
 	}

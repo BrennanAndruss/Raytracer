@@ -5,7 +5,7 @@ class Material;
 struct HitRecord {
 	Point3 p;
 	Vec3 normal;
-	std::shared_ptr<Material> material;
+	std::shared_ptr<Material> mat;
 	float t;
 	bool frontFace;
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hittable.h"
+#include "material.h"
 
 class Camera {
 public:
@@ -93,8 +94,12 @@ private:
 		HitRecord record;
 
 		if (world.hit(ray, Interval(0.001f, infinity), record)) {
-			Vec3 dir = record.normal + randomUnitVector();
-			return 0.5 * rayColor(Ray(record.p, dir), depth - 1, world);
+			Ray scattered;
+			Color attenuation;
+			if (record.mat->scatter(ray, record, attenuation, scattered)) {
+				return attenuation * rayColor(scattered, depth - 1, world);
+			}
+			return Color(0.0f, 0.0f, 0.0f);
 		}
 
 		Vec3 unitDir = normalize(ray.dir);

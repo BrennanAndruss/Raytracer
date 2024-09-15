@@ -14,6 +14,11 @@ struct Vec3 {
 		return Vec3(randomFloat(min, max), randomFloat(min, max), randomFloat(min, max));
 	}
 
+	bool nearZero() const {
+		auto s = 1e-8;
+		return (std::fabs(x) < s) && (std::fabs(y) < s) && (std::fabs(z) < s);
+	}
+
 	Vec3 operator-() const {
 		return Vec3(-x, -y, -z);
 	}
@@ -51,6 +56,10 @@ inline Vec3 operator*(const Vec3& a, float b) {
 
 inline Vec3 operator*(float a, const Vec3& b) {
 	return Vec3(a * b.x, a * b.y, a * b.z);
+}
+
+inline Vec3 operator*(const Vec3& a, const Vec3& b) {
+	return Vec3(a.x * b.x, a.y * b.y, a.z * b.z);
 }
 
 inline Vec3 operator/(const Vec3& a, float b) {

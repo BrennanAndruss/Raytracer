@@ -32,3 +32,22 @@ public:
 		return true;
 	}
 };
+
+class Metal : public Material {
+private:
+	Color albedo;
+	float fuzz;
+
+public:
+	Metal(const Color& albedo, float fuzz) : albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1) {}
+
+	bool scatter(
+		const Ray& rayIn, const HitRecord& record, Color& attenuation, Ray& scattered
+	) const override {
+		Vec3 reflected = reflect(rayIn.dir, record.normal);
+		reflected = normalize(reflected) + (fuzz * randomUnitVector());
+		scattered = Ray(record.p, reflected);
+		attenuation = albedo;
+		return (dot(scattered.dir, record.normal) > 0);
+	}
+};

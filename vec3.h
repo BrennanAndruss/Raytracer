@@ -6,6 +6,14 @@ struct Vec3 {
 	Vec3() : x(0.0f), y(0.0f), z(0.0f) {}
 	Vec3(float x, float y, float z) : x(x), y(y), z(z) {}
 
+	static Vec3 random() {
+		return Vec3(randomFloat(), randomFloat(), randomFloat());
+	}
+
+	static Vec3 random(float min, float max) {
+		return Vec3(randomFloat(min, max), randomFloat(min, max), randomFloat(min, max));
+	}
+
 	Vec3 operator-() const {
 		return Vec3(-x, -y, -z);
 	}
@@ -73,4 +81,22 @@ inline Vec3 normalize(const Vec3& a) {
 		return a / len;
 	}
 	return a;
+}
+
+inline Vec3 randomUnitVector() {
+	while (true) {
+		Vec3 a = Vec3::random(-1.0f, 1.0f);
+		float sqrLen = sqrMag(a);
+		if (1e-160 < sqrLen && sqrLen <= 1.0f) {
+			return a / std::sqrt(sqrLen);
+		}
+	}
+}
+
+inline Vec3 randomOnHemisphere(const Vec3& normal) {
+	Vec3 onUnitSphere = randomUnitVector();
+	if (dot(onUnitSphere, normal) > 0.0f) {
+		return onUnitSphere;
+	}
+	return -onUnitSphere;
 }

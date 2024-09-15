@@ -17,6 +17,7 @@ int main() {
 	camera.aspectRatio = 16.0f / 9.0f;
 	camera.imageWidth = 400;
 	camera.samplesPerPixel = 100;
+	camera.maxDepth = 50;
 
 	camera.render(world);
 	

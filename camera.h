@@ -7,6 +7,7 @@ public:
 	float aspectRatio = 1.0f;
 	int imageWidth = 100;
 	int samplesPerPixel = 10;
+	int maxDepth = 10;
 
 	void render(const Hittable& world) {
 		initialize();
@@ -20,7 +21,7 @@ public:
 
 				for (int sample = 0; sample < samplesPerPixel; sample++) {
 					Ray ray = getRay(i, j);
-					pixelColor += rayColor(ray, world);
+					pixelColor += rayColor(ray, maxDepth, world);
 				}
 
 				writeColor(std::cout, pixelSamplesScale * pixelColor);
@@ -83,11 +84,17 @@ private:
 		return Vec3(randomFloat() - 0.5f, randomFloat() - 0.5f, 0.0f);
 	}
 
-	Color rayColor(const Ray& ray, const Hittable& world) const {
+	Color rayColor(const Ray& ray, int depth, const Hittable& world) const {
+		// If the ray bounce limit is exceeded, nor more light is gathered
+		if (depth <= 0) {
+			return Color(0.0f, 0.0f, 0.0f);
+		}
+
 		HitRecord record;
 
-		if (world.hit(ray, Interval(0, infinity), record)) {
-			return 0.5 * (record.normal + Color(1.0f, 1.0f, 1.0f));
+		if (world.hit(ray, Interval(0.001f, infinity), record)) {
+			Vec3 dir = record.normal + randomUnitVector();
+			return 0.5 * rayColor(Ray(record.p, dir), depth - 1, world);
 		}
 
 		Vec3 unitDir = normalize(ray.dir);

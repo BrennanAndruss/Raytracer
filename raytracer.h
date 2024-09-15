@@ -23,6 +23,12 @@ inline float randomFloat() {
 	return distribution(generator);
 }
 
+inline float randomFloat(float min, float max) {
+	static std::uniform_real_distribution<float> distribution(min, max);
+	static std::mt19937 generator;
+	return distribution(generator);
+}
+
 // Common Headers
 
 #include "color.h"

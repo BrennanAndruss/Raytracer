@@ -110,6 +110,13 @@ inline Vec3 randomOnHemisphere(const Vec3& normal) {
 	return -onUnitSphere;
 }
 
-inline Vec3 reflect(const Vec3& a, const Vec3& normal) {
-	return a - 2.0f * dot(a, normal) * normal;
+inline Vec3 reflect(const Vec3& v, const Vec3& normal) {
+	return v - 2.0f * dot(v, normal) * normal;
+}
+
+inline Vec3 refract(const Vec3& uv, const Vec3& normal, float refractionRatio) {
+	float cosTheta = std::fmin(dot(-uv, normal), 1.0f);
+	Vec3 rOutPerp = refractionRatio * (uv + cosTheta * normal);
+	Vec3 rOutParallel = -std::sqrt(std::fabs(1.0f - sqrMag(rOutPerp))) * normal;
+	return rOutPerp + rOutParallel;
 }

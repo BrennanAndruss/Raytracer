@@ -71,7 +71,7 @@ public:
 		bool cannotRefract = refractionRatio * sinTheta > 1.0f;
 		Vec3 direction;
 
-		if (cannotRefract) {
+		if (cannotRefract || reflectance(cosTheta, refractionRatio) > randomFloat()) {
 			direction = reflect(unitDir, record.normal);
 		}
 		else {
@@ -81,5 +81,12 @@ public:
 		scattered = Ray(record.p, direction);
 		attenuation = Color(1.0f, 1.0f, 1.0f);
 		return true;
+	}
+
+private:
+	static float reflectance(float cosine, float refractionRatio) {
+		float r0 = (1 - refractionRatio) / (1 + refractionRatio);
+		r0 = r0 * r0;
+		return r0 + (1 - r0) * std::pow((1 - cosine), 5);
 	}
 };

@@ -1,11 +1,12 @@
 # 🎥 Raytracer
 
-A software raytracing engine build in native C++ for rendering 3D scenes. This project was my first project in C++ and my introduction to several computer graphics concepts.
+A software raytracing engine built in native C++ for rendering 3D scenes. This project was my first project in C++ and my introduction to several computer graphics concepts.
 
 ## 📝 Features
 
-- Ray-object intersections, shading techniques, antialiasing, gamma correction, and more
+- Utilizes ray-object intersections, shading techniques, antialiasing, gamma correction, and more
 - Supports diffuse, metal, and dielectric materials, sumulating accurate light reflection, refraction, and scattering
+- Includes a positionable virtual camera with defocus blur and customizable dimensions
 - Additional features in progress...
 
 ## 🔍 What I Learned

@@ -15,6 +15,9 @@ public:
 	Point3 lookAt = Point3(0.0f, 0.0f, -1.0f);
 	Vec3 viewUp = Vec3(0.0f, 1.0f, 0.0f);
 
+	float defocusAngle = 0.0f;
+	float focusDist = 1.0f;
+
 	void render(const Hittable& world) {
 		initialize();
 
@@ -39,12 +42,12 @@ public:
 
 private:
 	int imageHeight;
-	float pixelSamplesScale;	// Color scale factor for a sum of pixel samples
+	float pixelSamplesScale;			// Color scale factor for a sum of pixel samples
 	Point3 center;
 	Point3 pixel00Loc;
-	Vec3 pixelDeltaU;
-	Vec3 pixelDeltaV;
-	Vec3 u, v, w;				// Camera frame basis vectors
+	Vec3 pixelDeltaU, pixelDeltaV;
+	Vec3 u, v, w;						// Camera frame basis vectors
+	Vec3 defocusDiskU, defocusDiskV;
 
 	void initialize() {
 		imageHeight = static_cast<int>(imageWidth / aspectRatio);
@@ -55,10 +58,9 @@ private:
 		center = lookFrom;
 
 		// Determine viewport dimensions
-		float focalLength = mag(lookFrom - lookAt);
 		float theta = degreesToRadians(vFov);
 		float h = std::tan(theta / 2.0f);
-		float viewportHeight = 2.0f * h * focalLength;
+		float viewportHeight = 2.0f * h * focusDist;
 		float viewportWidth = viewportHeight * (static_cast<float>(imageWidth) / imageHeight);
 
 		// Calculate the unit basis vectors for the camera coordinate frame
@@ -76,18 +78,24 @@ private:
 
 		// Calculate the location of the upper left pixel
 		auto viewportUpperLeft = 
-			center - (focalLength * w) - viewportU / 2.0f - viewportV / 2.0f;
+			center - (focusDist * w) - viewportU / 2.0f - viewportV / 2.0f;
 		pixel00Loc = viewportUpperLeft + 0.5f * (pixelDeltaU + pixelDeltaV);
+
+		// Calculate the camera defocus disk basis vectors
+		float defocusRadius = focusDist * std::tan(degreesToRadians(defocusAngle) / 2.0f);
+		defocusDiskU = defocusRadius * u;
+		defocusDiskV = defocusRadius * v;
 	}
 
 	Ray getRay(int i, int j) const {
-		// Construct a camera ray originating from the origin and driected at randomly sampled 
-		// point around the pixel location i, j
+		// Construct a camera ray originating from the defocus disk and driected at randomly
+		// sampled point around the pixel location i, j
 
 		Vec3 offset = sampleSquare();
-		Point3 pixelSample = pixel00Loc + (i + offset.x) * pixelDeltaU + (j + offset.y) * pixelDeltaV;
+		Point3 pixelSample = 
+			pixel00Loc + (i + offset.x) * pixelDeltaU + (j + offset.y) * pixelDeltaV;
 
-		Point3 rayOrigin = center;
+		Point3 rayOrigin = (defocusAngle <= 0) ? center : defocusDiskSample();
 		Vec3 rayDir = pixelSample - rayOrigin;
 
 		return Ray(rayOrigin, rayDir);
@@ -96,6 +104,12 @@ private:
 	Vec3 sampleSquare() const {
 		// Returns the vector to a random point in the [-.5, -.5]-[+.5, +.5] square
 		return Vec3(randomFloat() - 0.5f, randomFloat() - 0.5f, 0.0f);
+	}
+
+	Point3 defocusDiskSample() const {
+		// Returns a random point in the camera defocus disk
+		Point3 p = randomInUnitDisk();
+		return center + p.x * defocusDiskU + p.y * defocusDiskV;
 	}
 
 	Color rayColor(const Ray& ray, int depth, const Hittable& world) const {

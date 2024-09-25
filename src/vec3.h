@@ -102,6 +102,15 @@ inline Vec3 randomUnitVector() {
 	}
 }
 
+inline Vec3 randomInUnitDisk() {
+	while (true) {
+		Point3 p = Vec3(randomFloat(-1.0f, 1.0f), randomFloat(-1.0f, 1.0f), 0.0f);
+		if (sqrMag(p) < 1.0f) {
+			return p;
+		}
+	}
+}
+
 inline Vec3 randomOnHemisphere(const Vec3& normal) {
 	Vec3 onUnitSphere = randomUnitVector();
 	if (dot(onUnitSphere, normal) > 0.0f) {

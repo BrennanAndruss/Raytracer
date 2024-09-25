@@ -10,6 +10,11 @@ public:
 	int samplesPerPixel = 10;
 	int maxDepth = 10;
 
+	float vFov = 90.0f;
+	Point3 lookFrom = Point3(0.0f, 0.0f, 0.0f);
+	Point3 lookAt = Point3(0.0f, 0.0f, -1.0f);
+	Vec3 viewUp = Vec3(0.0f, 1.0f, 0.0f);
+
 	void render(const Hittable& world) {
 		initialize();
 
@@ -39,6 +44,7 @@ private:
 	Point3 pixel00Loc;
 	Vec3 pixelDeltaU;
 	Vec3 pixelDeltaV;
+	Vec3 u, v, w;				// Camera frame basis vectors
 
 	void initialize() {
 		imageHeight = static_cast<int>(imageWidth / aspectRatio);
@@ -46,24 +52,31 @@ private:
 
 		pixelSamplesScale = 1.0f / samplesPerPixel;
 
-		center = Point3(0.0f, 0.0f, 0.0f);
+		center = lookFrom;
 
 		// Determine viewport dimensions
-		float focalLength = 1.0f;
-		float viewportHeight = 2.0f;
+		float focalLength = mag(lookFrom - lookAt);
+		float theta = degreesToRadians(vFov);
+		float h = std::tan(theta / 2.0f);
+		float viewportHeight = 2.0f * h * focalLength;
 		float viewportWidth = viewportHeight * (static_cast<float>(imageWidth) / imageHeight);
 
+		// Calculate the unit basis vectors for the camera coordinate frame
+		w = normalize(lookFrom - lookAt);
+		u = normalize(cross(viewUp, w));
+		v = cross(w, u);
+
 		// Calculate the horizontal and vertical vectors along the viewport edges
-		auto viewportU = Vec3(viewportWidth, 0.0f, 0.0f);
-		auto viewportV = Vec3(0.0f, -viewportHeight, 0.0f);
+		auto viewportU = viewportWidth * u;
+		auto viewportV = viewportHeight * -v;
 
 		// Calculate the horizontal and vertical delta vectors from pixel to pixel
 		pixelDeltaU = viewportU / imageWidth;
 		pixelDeltaV = viewportV / imageHeight;
 
 		// Calculate the location of the upper left pixel
-		auto viewportUpperLeft =
-			center - Vec3(0.0f, 0.0f, focalLength) - viewportU / 2.0f - viewportV / 2.0f;
+		auto viewportUpperLeft = 
+			center - (focalLength * w) - viewportU / 2.0f - viewportV / 2.0f;
 		pixel00Loc = viewportUpperLeft + 0.5f * (pixelDeltaU + pixelDeltaV);
 	}
 

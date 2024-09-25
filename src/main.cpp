@@ -29,6 +29,11 @@ int main() {
 	camera.samplesPerPixel = 100;
 	camera.maxDepth = 50;
 
+	camera.vFov = 20.0f;
+	camera.lookFrom = Point3(-2.0f, 2.0f, 1.0f);
+	camera.lookAt = Point3(0.0f, 0.0f, -1.0f);
+	camera.viewUp = Vec3(0.0f, 1.0f, 0.0f);
+
 	camera.render(world);
 	
 }

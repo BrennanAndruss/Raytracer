@@ -65,7 +65,7 @@ int main() {
 	camera.lookAt = Point3(0.0f, 0.0f, 0.0f);
 	camera.viewUp = Vec3(0.0f, 1.0f, 0.0f);
 
-	camera.defocusAngle = 0.1f;
+	camera.defocusAngle = 0.6f;
 	camera.focusDist = 10.0f;
 
 	camera.render(world);

@@ -27,7 +27,7 @@ public:
 			scatterDir = record.normal;
 		}
 		
-		scattered = Ray(record.p, scatterDir);
+		scattered = Ray(record.p, scatterDir, rayIn.time);
 		attenuation = albedo;
 		return true;
 	}
@@ -46,7 +46,7 @@ public:
 	) const override {
 		Vec3 reflected = reflect(rayIn.dir, record.normal);
 		reflected = normalize(reflected) + (fuzz * randomUnitVector());
-		scattered = Ray(record.p, reflected);
+		scattered = Ray(record.p, reflected, rayIn.time);
 		attenuation = albedo;
 		return (dot(scattered.dir, record.normal) > 0);
 	}
@@ -78,7 +78,7 @@ public:
 			direction = refract(unitDir, record.normal, refractionRatio);
 		}
 
-		scattered = Ray(record.p, direction);
+		scattered = Ray(record.p, direction, rayIn.time);
 		attenuation = Color(1.0f, 1.0f, 1.0f);
 		return true;
 	}

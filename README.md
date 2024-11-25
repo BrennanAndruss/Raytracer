@@ -15,6 +15,15 @@ A software raytracing engine built in native C++ for rendering 3D scenes. This p
 - Foundational concepts in computer graphics, applied through raytracing and rendering
 - The mathematics and physics behind rendering, particularly vector math and optics
 
+## 🖼️ Results
+
+### Sphere Scene
+
+![Sphere Scene](./images/Sphere-Scene.png)
+
+- 532 spheres with random positions and materials, including metal and glass balls
+- 1200x675 pixels, 500 sampled rays per pixel, 50 ray bounce max
+
 ## 📚 Reference
 
 - [Ray Tracing in One Weekend](https://raytracing.github.io/) 

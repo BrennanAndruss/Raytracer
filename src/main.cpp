@@ -69,6 +69,11 @@ int main() {
 	camera.defocusAngle = 0.6f;
 	camera.focusDist = 10.0f;
 
+	auto start = std::chrono::high_resolution_clock::now();
 	camera.render(world);
+	auto end = std::chrono::high_resolution_clock::now();
+
+	std::chrono::duration<double> duration = end - start;
+	std::clog << "Render time: " << duration.count() << " s\n";
 	
 }

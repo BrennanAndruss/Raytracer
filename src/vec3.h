@@ -3,6 +3,13 @@
 struct Vec3 {
 	float x, y, z;
 
+	float operator[](int i) const {
+		if (i == 0) return x;
+		if (i == 1) return y;
+		if (i == 2) return z;
+		throw std::out_of_range("Index out of range");
+	}
+
 	Vec3() : x(0.0f), y(0.0f), z(0.0f) {}
 	Vec3(float x, float y, float z) : x(x), y(y), z(z) {}
 

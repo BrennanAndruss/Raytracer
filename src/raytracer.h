@@ -30,6 +30,10 @@ inline float randomFloat(float min, float max) {
 	return distribution(generator);
 }
 
+inline int randomInt(int min, int max) {
+	return int(randomFloat(min, max + 1));
+}
+
 // Common Headers
 
 #include "color.h"

@@ -1,5 +1,6 @@
 #include "raytracer.h"
 
+#include "bvh.h"
 #include "camera.h"
 #include "hittable.h"
 #include "hittable_list.h"
@@ -53,6 +54,8 @@ int main() {
 
 	auto material3 = std::make_shared<Metal>(Color(0.7f, 0.6f, 0.5f), 0.0f);
 	world.add(std::make_shared<Sphere>(Point3(4.0f, 1.0f, 0.0f), 1.0f, material3));
+
+	world = HittableList(std::make_shared<BVHNode>(world));
 
 	Camera camera;
 

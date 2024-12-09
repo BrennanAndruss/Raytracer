@@ -15,6 +15,7 @@ A software raytracing engine built in native C++ for rendering 3D scenes. This p
 - Programming in C++, covering syntax, conventions, the standard library, and specific C++ features
 - Foundational concepts in computer graphics, applied through raytracing and rendering
 - The mathematics and physics behind rendering, particularly vector math and optics
+- Setting up build systems for C++ projects, including CMake and Visual Studio
 
 ## 🖼️ Results
 

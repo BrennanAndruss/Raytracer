@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 project(Raytracer)
 
-# Add the executable and include all source files
+# Add the executable and include all source and external files
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*.cpp")
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 # Include directories for headers
-target_include_directories(${PROJECT_NAME} PRIVATE src)
+target_include_directories(${PROJECT_NAME} PRIVATE src ext)

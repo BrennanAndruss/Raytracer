@@ -106,6 +106,29 @@ void checkeredSpheres()
 	camera.render(world);
 }
 
+void earth()
+{
+	auto earthTexture = std::make_shared<ImageTexture>("earthmap.jpg");
+	auto earthMaterial = std::make_shared<Lambertian>(earthTexture);
+	auto globe = std::make_shared<Sphere>(Point3(0.0f, 0.0f, 0.0f), 2.0f, earthMaterial);
+
+	Camera camera;
+
+	camera.aspectRatio = 16.0f / 9.0f;
+	camera.imageWidth = 400;
+	camera.samplesPerPixel = 100;
+	camera.maxDepth = 50;
+
+	camera.vFov = 20;
+	camera.lookFrom = Point3(0.0f, 0.0f, 12.0f);
+	camera.lookAt = Point3(0.0f, 0.0f, 0.0f);
+	camera.viewUp = Vec3(0.0f, 1.0f, 0.0f);
+
+	camera.defocusAngle = 0;
+
+	camera.render(HittableList(globe));
+}
+
 int main(int argc, char* argv[])
 {
 	// Select the scene to render using command line arguments
@@ -134,6 +157,7 @@ int main(int argc, char* argv[])
 	{
 	case 1: bouncingSpheres(); break;
 	case 2: checkeredSpheres(); break;
+	case 3: earth(); break;
 	default: bouncingSpheres(); break;
 	}
 

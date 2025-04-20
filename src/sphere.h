@@ -9,6 +9,15 @@ private:
 	std::shared_ptr<Material> mat;
 	AABB bbox;
 
+	static void getSphereUV(const Point3& p, float& u, float& v)
+	{
+		float theta = std::acos(-p.y);
+		float phi = std::atan2(-p.z, p.x) + pi;
+
+		u = phi / (2 * pi);
+		v = theta / pi;
+	}
+
 public:
 	// Stationary Sphere
 	Sphere(const Point3& staticCenter, float radius, std::shared_ptr<Material> mat)
@@ -57,6 +66,7 @@ public:
 		// Get the outward unit normal
 		Vec3 outwardNormal = (record.p - currentCenter) / radius;
 		record.setFaceNormal(ray, outwardNormal);
+		getSphereUV(outwardNormal, record.u, record.v);
 		record.mat = mat;
 
 		return true;

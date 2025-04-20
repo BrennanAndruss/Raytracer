@@ -7,12 +7,14 @@
 #include "material.h"
 #include "sphere.h"
 
-int main() {
+void bouncingSpheres() {
 
 	HittableList world;
 
-	auto materialGround = std::make_shared<Lambertian>(Color(0.5f, 0.5f, 0.5f));
-	world.add(std::make_shared<Sphere>(Point3(0.0f, -1000.0f, 0.0f), 1000.0f, materialGround));
+	auto checker = std::make_shared<CheckerTexture>(
+		0.32f, Color(0.2f, 0.3f, 0.1f), Color(0.9f, 0.9f, 0.9f));
+	world.add(std::make_shared<Sphere>(
+		Point3(0.0f, -1000.0f, 0.0f), 1000.0f, std::make_shared<Lambertian>(checker)));
 
 	// Add lots of random spheres
 	for (int a = -11; a < 11; a++) {
@@ -72,11 +74,71 @@ int main() {
 	camera.defocusAngle = 0.6f;
 	camera.focusDist = 10.0f;
 
-	auto start = std::chrono::high_resolution_clock::now();
 	camera.render(world);
+}
+
+void checkeredSpheres()
+{
+	HittableList world;
+
+	auto checker = std::make_shared<CheckerTexture>(
+		0.32f, Color(0.2f, 0.3f, 0.1f), Color(0.9f, 0.9f, 0.9f));
+
+	world.add(std::make_shared<Sphere>(
+		Point3(0.0f, -10.0f, 0.0f), 10.0f, std::make_shared<Lambertian>(checker)));
+	world.add(std::make_shared<Sphere>(
+		Point3(0.0f, 10.0f, 0.0f), 10.0f, std::make_shared<Lambertian>(checker)));
+
+	Camera camera;
+
+	camera.aspectRatio = 16.0f / 9.0f;
+	camera.imageWidth = 400;
+	camera.samplesPerPixel = 100;
+	camera.maxDepth = 50;
+
+	camera.vFov = 20;
+	camera.lookFrom = Point3(13.0f, 2.0f, 3.0f);
+	camera.lookAt = Point3(0.0f, 0.0f, 0.0f);
+	camera.viewUp = Vec3(0.0f, 1.0f, 0.0f);
+
+	camera.defocusAngle = 0;
+
+	camera.render(world);
+}
+
+int main(int argc, char* argv[])
+{
+	// Select the scene to render using command line arguments
+	if (argc < 2)
+	{
+		// Prompt the user to rerun the program with a scene number if none is provided
+		std::cerr << "Provide an integer as the scene number to render.\n";
+		return 1;
+	}
+
+	int scene;
+	try
+	{
+		scene = std::stoi(argv[1]);
+	}
+	catch (std::invalid_argument&)
+	{
+		std::cerr << "Invalid input. Please provide a valid integer.\n";
+		return 1;
+	}
+
+	// Capture the render time of the selected scene
+	auto start = std::chrono::high_resolution_clock::now();
+
+	switch (scene)
+	{
+	case 1: bouncingSpheres(); break;
+	case 2: checkeredSpheres(); break;
+	default: bouncingSpheres(); break;
+	}
+
 	auto end = std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<double> duration = end - start;
 	std::clog << "Render time: " << duration.count() << " s\n";
-	
 }

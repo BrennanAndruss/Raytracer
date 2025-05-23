@@ -5,7 +5,9 @@
 #include "hittable.h"
 #include "hittable_list.h"
 #include "material.h"
+#include "quad.h"
 #include "sphere.h"
+#include "texture.h"
 
 void bouncingSpheres() {
 
@@ -129,6 +131,43 @@ void earth()
 	camera.render(HittableList(globe));
 }
 
+void quads()
+{
+	HittableList world;
+
+	auto leftRed = std::make_shared<Lambertian>(Color(1.0f, 0.2f, 0.2f));
+	auto backGreen = std::make_shared<Lambertian>(Color(0.2f, 1.0f, 0.2f));
+	auto rightBlue = std::make_shared<Lambertian>(Color(0.2f, 0.2f, 1.0f));
+	auto upperOrange = std::make_shared<Lambertian>(Color(1.0f, 0.5f, 0.0f));
+	auto lowerTeal = std::make_shared<Lambertian>(Color(0.2f, 0.8f, 0.8f));
+
+	world.add(std::make_shared<Quad>(Point3(-3.0f, -2.0f, 5.0f), Vec3(0.0f, 0.0f, -4.0f),
+		Vec3(0.0f, 4.0f, 0.0f), leftRed));
+	world.add(std::make_shared<Quad>(Point3(-2.0f, -2.0f, 0.0f), Vec3(4.0f, 0.0f, 0.0f),
+		Vec3(0.0f, 4.0f, 0.0f), backGreen));
+	world.add(std::make_shared<Quad>(Point3(3.0f, -2.0f, 1.0f), Vec3(0.0f, 0.0f, 4.0f),
+		Vec3(0.0f, 4.0f, 0.0f), rightBlue));
+	world.add(std::make_shared<Quad>(Point3(-2.0f, 3.0f, 1.0f), Vec3(4.0f, 0.0f, 0.0f),
+		Vec3(0.0f, 0.0f, 4.0f), upperOrange));
+	world.add(std::make_shared<Quad>(Point3(-2.0f, -3.0f, 5.0f), Vec3(4.0f, 0.0f, 0.0f),
+		Vec3(0.0f, 0.0f, -4.0f), lowerTeal));
+
+	Camera camera;
+
+	camera.aspectRatio = 1.0;
+	camera.imageWidth = 400;
+	camera.samplesPerPixel = 100;
+	camera.maxDepth = 50;
+
+	camera.vFov = 80;
+	camera.lookFrom = Point3(0.0f, 0.0f, 9.0f);
+	camera.lookAt = Point3(0.0f, 0.0f, 0.0f);
+	camera.viewUp = Vec3(0.0f, 1.0f, 0.0f);
+	camera.defocusAngle = 0;
+
+	camera.render(world);
+}
+
 int main(int argc, char* argv[])
 {
 	// Select the scene to render using command line arguments
@@ -158,6 +197,7 @@ int main(int argc, char* argv[])
 	case 1: bouncingSpheres(); break;
 	case 2: checkeredSpheres(); break;
 	case 3: earth(); break;
+	case 4: quads(); break;
 	default: bouncingSpheres(); break;
 	}
 

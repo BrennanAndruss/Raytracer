@@ -6,7 +6,10 @@ public:
 
 	AABB() {}
 	AABB(const Interval& x, const Interval& y, const Interval& z)
-		: x(x), y(y), z(z) {}
+		: x(x), y(y), z(z) 
+	{
+		padToMinimums();
+	}
 	AABB(const Point3& a, const Point3& b) {
 		x = (a.x <= b.x) ? Interval(a.x, b.x) : Interval(b.x, a.x);
 		y = (a.y <= b.y) ? Interval(a.y, b.y) : Interval(b.y, a.y);
@@ -16,6 +19,8 @@ public:
 		x = Interval(box0.x, box1.x);
 		y = Interval(box0.y, box1.y);
 		z = Interval(box0.z, box1.z);
+
+		padToMinimums();
 	}
 
 	const Interval& axisInterval(int n) const {
@@ -60,6 +65,15 @@ public:
 	}
 
 	static const AABB Empty, Universe;
+
+private:
+	void padToMinimums()
+	{
+		float delta = 0.0001f;
+		if (x.size() < delta) x = x.expand(delta);
+		if (y.size() < delta) y = y.expand(delta);
+		if (z.size() < delta) z = z.expand(delta);
+	}
 };
 
 const AABB AABB::Empty = AABB(Interval::Empty, Interval::Empty, Interval::Empty);

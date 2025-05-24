@@ -9,6 +9,7 @@ public:
 	int imageWidth = 100;
 	int samplesPerPixel = 10;
 	int maxDepth = 10;
+	Color background;
 
 	float vFov = 90.0f;
 	Point3 lookFrom = Point3(0.0f, 0.0f, 0.0f);
@@ -114,24 +115,26 @@ private:
 	}
 
 	Color rayColor(const Ray& ray, int depth, const Hittable& world) const {
-		// If the ray bounce limit is exceeded, nor more light is gathered
+		// If the ray bounce limit is exceeded, no more light is gathered
 		if (depth <= 0) {
 			return Color(0.0f, 0.0f, 0.0f);
 		}
 
 		HitRecord record;
 
-		if (world.hit(ray, Interval(0.001f, infinity), record)) {
-			Ray scattered;
-			Color attenuation;
-			if (record.mat->scatter(ray, record, attenuation, scattered)) {
-				return attenuation * rayColor(scattered, depth - 1, world);
-			}
-			return Color(0.0f, 0.0f, 0.0f);
-		}
+		// If the ray hits noting, return the background color
+		if (!world.hit(ray, Interval(0.001f, infinity), record))
+			return background;
 
-		Vec3 unitDir = normalize(ray.dir);
-		float a = 0.5 * (unitDir.y + 1.0f);
-		return (1.0 - a) * Color(1.0f, 1.0f, 1.0f) + a * Color(0.5f, 0.7f, 1.0f);
+		Ray scattered;
+		Color attenuation;
+		Color emissionColor = record.mat->emitted(record.u, record.v, record.p);
+		
+		if (!record.mat->scatter(ray, record, attenuation, scattered))
+			return emissionColor;
+		
+		// If the ray is scattered, recursively gather light from the new ray
+		Color scatterColor = attenuation * rayColor(scattered, depth - 1, world);
+		return emissionColor + scatterColor;
 	}
 };

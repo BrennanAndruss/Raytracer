@@ -3,16 +3,26 @@
 #include "hittable.h"
 #include "texture.h"
 
-class Material {
+class Material 
+{
 public:
+	virtual ~Material() = default;
+
+	virtual Color emitted(float u, float v, const Point3& p) const
+	{
+		return Color(0.0f, 0.0f, 0.0f);
+	}
+
 	virtual bool scatter(
 		const Ray& rayIn, const HitRecord& hitRecord, Color& attenuation, Ray& scattered
-	) const {
+	) const 
+	{
 		return false;
 	}
 };
 
-class Lambertian : public Material {
+class Lambertian : public Material 
+{
 private:
 	std::shared_ptr<Texture> texture;
 
@@ -22,12 +32,12 @@ public:
 
 	bool scatter(
 		const Ray& rayIn, const HitRecord& record, Color& attenuation, Ray& scattered
-	) const override {
+	) const override 
+	{
 		auto scatterDir = record.normal + randomUnitVector();
 
-		if (scatterDir.nearZero()) {
+		if (scatterDir.nearZero())
 			scatterDir = record.normal;
-		}
 		
 		scattered = Ray(record.p, scatterDir, rayIn.time);
 		attenuation = texture->value(record.u, record.v, record.p);
@@ -45,7 +55,8 @@ public:
 
 	bool scatter(
 		const Ray& rayIn, const HitRecord& record, Color& attenuation, Ray& scattered
-	) const override {
+	) const override 
+	{
 		Vec3 reflected = reflect(rayIn.dir, record.normal);
 		reflected = normalize(reflected) + (fuzz * randomUnitVector());
 		scattered = Ray(record.p, reflected, rayIn.time);
@@ -54,7 +65,8 @@ public:
 	}
 };
 
-class Dielectric : public Material {
+class Dielectric : public Material 
+{
 private:
 	float refractionIndex;
 
@@ -63,7 +75,8 @@ public:
 
 	bool scatter(
 		const Ray& rayIn, const HitRecord& record, Color& attenuation, Ray& scattered
-	) const override {
+	) const override 
+	{
 		float refractionRatio = record.frontFace ? (1.0f / refractionIndex) : refractionIndex;
 
 		Vec3 unitDir = normalize(rayIn.dir);
@@ -73,10 +86,12 @@ public:
 		bool cannotRefract = refractionRatio * sinTheta > 1.0f;
 		Vec3 direction;
 
-		if (cannotRefract || reflectance(cosTheta, refractionRatio) > randomFloat()) {
+		if (cannotRefract || reflectance(cosTheta, refractionRatio) > randomFloat()) 
+		{
 			direction = reflect(unitDir, record.normal);
 		}
-		else {
+		else 
+		{
 			direction = refract(unitDir, record.normal, refractionRatio);
 		}
 
@@ -86,9 +101,25 @@ public:
 	}
 
 private:
-	static float reflectance(float cosine, float refractionRatio) {
+	static float reflectance(float cosine, float refractionRatio) 
+	{
 		float r0 = (1 - refractionRatio) / (1 + refractionRatio);
 		r0 = r0 * r0;
 		return r0 + (1 - r0) * std::pow((1 - cosine), 5);
+	}
+};
+
+class DiffuseLight : public Material 
+{
+private:
+	std::shared_ptr<Texture> tex;
+
+public:
+	DiffuseLight(std::shared_ptr<Texture> tex) : tex(tex) {}
+	DiffuseLight(const Color& emit) : tex(std::make_shared<SolidColor>(emit)) {}
+
+	color emitted(float u, float v, const Point3& p) const override
+	{
+		return tex->value(u, v, p);
 	}
 };

@@ -67,6 +67,7 @@ void bouncingSpheres() {
 	camera.imageWidth = 400;
 	camera.samplesPerPixel = 100;
 	camera.maxDepth = 10;
+	camera.background = Color(0.7f, 0.8f, 1.0f);
 
 	camera.vFov = 20.0f;
 	camera.lookFrom = Point3(13.0f, 2.0f, 3.0f);
@@ -97,6 +98,7 @@ void checkeredSpheres()
 	camera.imageWidth = 400;
 	camera.samplesPerPixel = 100;
 	camera.maxDepth = 50;
+	camera.background = Color(0.7f, 0.8f, 1.0f);
 
 	camera.vFov = 20;
 	camera.lookFrom = Point3(13.0f, 2.0f, 3.0f);
@@ -120,6 +122,7 @@ void earth()
 	camera.imageWidth = 400;
 	camera.samplesPerPixel = 100;
 	camera.maxDepth = 50;
+	camera.background = Color(0.7f, 0.8f, 1.0f);
 
 	camera.vFov = 20;
 	camera.lookFrom = Point3(0.0f, 0.0f, 12.0f);
@@ -158,12 +161,53 @@ void quads()
 	camera.imageWidth = 400;
 	camera.samplesPerPixel = 100;
 	camera.maxDepth = 50;
+	camera.background = Color(0.7f, 0.8f, 1.0f);
 
 	camera.vFov = 80;
 	camera.lookFrom = Point3(0.0f, 0.0f, 9.0f);
 	camera.lookAt = Point3(0.0f, 0.0f, 0.0f);
 	camera.viewUp = Vec3(0.0f, 1.0f, 0.0f);
 	camera.defocusAngle = 0;
+
+	camera.render(world);
+}
+
+void cornellBox()
+{
+	HittableList world;
+
+	auto red = std::make_shared<Lambertian>(Color(0.65f, 0.05f, 0.05f));
+	auto white = std::make_shared<Lambertian>(Color(0.73f, 0.73f, 0.73f));
+	auto green = std::make_shared<Lambertian>(Color(0.12f, 0.45f, 0.15f));
+	auto light = std::make_shared<DiffuseLight>(Color(15.0f, 15.0f, 15.0f));
+
+	world.add(std::make_shared<Quad>(Point3(555.0f, 0.0f, 0.0f), 
+		Vec3(0.0f, 555.0f, 0.0f), Vec3(0.0f, 0.0f, 555.0f), green));
+	world.add(std::make_shared<Quad>(Point3(0.0f, 0.0f, 0.0f), 
+		Vec3(0.0f, 555.0f, 0.0f), Vec3(0.0f, 0.0f, 555.0f), red));
+	world.add(std::make_shared<Quad>(Point3(343.0f, 554.0f, 332.0f), 
+		Vec3(-130.0f, 0.0f, 0.0f), Vec3(0, 0, -105), light));
+	world.add(std::make_shared<Quad>(Point3(0.0f, 0.0f, 0.0f), 
+		Vec3(555.0f, 0.0f, 0.0f), Vec3(0.0f, 0.0f, 555.0f), white));
+	world.add(std::make_shared<Quad>(Point3(555.0f, 555.0f, 555.0f), 
+		Vec3(-555.0f, 0.0f, 0.0f), Vec3(0.0f, 0.0f, -555.0f), white));
+	world.add(std::make_shared<Quad>(Point3(0.0f, 0.0f, 555.0f), 
+		Vec3(555.0f, 0.0f, 0.0f), Vec3(0.0f, 555.0f, 0.0f), white));
+
+	Camera camera;
+
+	camera.aspectRatio = 1.0f;
+	camera.imageWidth = 600;
+	camera.samplesPerPixel = 200;
+	camera.maxDepth = 50;
+	camera.background = Color(0.0f, 0.0f, 0.0f);
+
+	camera.vFov = 40.0f;
+	camera.lookFrom = Point3(278.0f, 278.0f, -800.0f);
+	camera.lookAt = Point3(278.0f, 278.0f, 0.0f);
+	camera.viewUp = Vec3(0.0f, 1.0f, 0.0f);
+
+	camera.defocusAngle = 0.0f;
 
 	camera.render(world);
 }
@@ -198,6 +242,7 @@ int main(int argc, char* argv[])
 	case 2: checkeredSpheres(); break;
 	case 3: earth(); break;
 	case 4: quads(); break;
+	case 5: cornellBox(); break;
 	default: bouncingSpheres(); break;
 	}
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hittable.h"
+#include "hittable_list.h"
 
 class Quad : public Hittable
 {
@@ -75,3 +76,25 @@ public:
 
 	AABB boundingBox() const override { return bbox; }
 };
+
+inline std::shared_ptr<HittableList> box(const Point3& a, const Point3& b, std::shared_ptr<Material> mat)
+{
+	// Returns the 3D box that contains two opposite vertices a and b
+	auto sides = std::make_shared<HittableList>();
+
+	auto min = Point3(std::fmin(a.x, b.x), std::fmin(a.y, b.y), std::fmin(a.z, b.z));
+	auto max = Point3(std::fmax(a.x, b.x), std::fmax(a.y, b.y), std::fmax(a.z, b.z));
+
+	auto dx = Vec3(max.x - min.x, 0.0f, 0.0f);
+	auto dy = Vec3(0.0f, max.y - min.y, 0.0f);
+	auto dz = Vec3(0.0f, 0.0f, max.z - min.z);
+
+	sides->add(std::make_shared<Quad>(Point3(min.x, min.y, max.z), dx, dy, mat)); // front
+	sides->add(std::make_shared<Quad>(Point3(max.x, min.y, max.z), -dz, dy, mat)); // right
+	sides->add(std::make_shared<Quad>(Point3(max.x, min.y, min.z), -dx, dy, mat)); // back
+	sides->add(std::make_shared<Quad>(Point3(min.x, min.y, min.z), dz, dy, mat)); // left
+	sides->add(std::make_shared<Quad>(Point3(min.x, max.y, max.z), dx, -dz, mat)); // top
+	sides->add(std::make_shared<Quad>(Point3(min.x, min.y, min.z), dx, dz, mat)); // bottom
+
+	return sides;
+}

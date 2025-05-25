@@ -29,3 +29,13 @@ struct Interval {
 
 const Interval Interval::Empty = Interval(+infinity, -infinity);
 const Interval Interval::Universe = Interval(-infinity, +infinity);
+
+inline Interval operator+(const Interval& ival, float displacement)
+{
+	return Interval(ival.min + displacement, ival.max + displacement);
+}
+
+inline Interval operator+(float displacement, const Interval& ival)
+{
+	return ival + displacement;
+}

@@ -194,6 +194,16 @@ void cornellBox()
 	world.add(std::make_shared<Quad>(Point3(0.0f, 0.0f, 555.0f), 
 		Vec3(555.0f, 0.0f, 0.0f), Vec3(0.0f, 555.0f, 0.0f), white));
 
+	std::shared_ptr<Hittable> box1 = box(Point3(0.0f, 0.0f, 0.0f), Point3(165.0f, 330.0f, 165.0f), white);
+	box1 = std::make_shared<RotateY>(box1, 15.0f);
+	box1 = std::make_shared<Translate>(box1, Vec3(265.0f, 0.0f, 295.0f));
+	world.add(box1);
+
+	std::shared_ptr<Hittable> box2 = box(Point3(0.0f, 0.0f, 0.0f), Point3(165.0f, 165.0f, 165.0f), white);
+	box2 = std::make_shared<RotateY>(box2, -18.0f);
+	box2 = std::make_shared<Translate>(box2, Vec3(130.0f, 0.0f, 65.0f));
+	world.add(box2);
+
 	Camera camera;
 
 	camera.aspectRatio = 1.0f;

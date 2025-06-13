@@ -207,8 +207,8 @@ void cornellBox()
 	Camera camera;
 
 	camera.aspectRatio = 1.0f;
-	camera.imageWidth = 600;
-	camera.samplesPerPixel = 200;
+	camera.imageWidth = 1200;
+	camera.samplesPerPixel = 500;
 	camera.maxDepth = 50;
 	camera.background = Color(0.0f, 0.0f, 0.0f);
 

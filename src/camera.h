@@ -6,6 +6,9 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+#include <thread>
+#include <mutex>
+
 struct Tile
 {
 	int x0, y0, x1, y1;
@@ -33,14 +36,30 @@ public:
 	{
 		initialize();
 
-		// std::cout << "P3\n" << imageWidth << " " << imageHeight << "\n255\n";
+#define useMT 1
+#if useMT
+		// Create a thread pool to render tiles in parallel
+		int threadCount = std::thread::hardware_concurrency();
+		std::vector<std::thread> threads;
+		std::cout << "Available threads: " << threadCount << " \n";
 
-		for (int i = 0; i < tiles.size(); i++)
+		for (int i = 0; i < threadCount; i++)
 		{
-			std::clog << "\rTiles remaining: " << (tiles.size() - i) << " " << std::flush;
-			renderTile(tiles[i], world);
+			threads.emplace_back(&Camera::renderWorker, this, std::ref(world));
 		}
 
+		// Wait for all threads to finish rendering
+		for (auto& t : threads)
+			t.join();
+
+#else
+		for (int i = 0; i < tileQueue.size(); i++)
+		{
+			std::clog << "\rTiles remaining: " << (tileQueue.size() - i) << " " << std::flush;
+			renderTile(tileQueue[i], world);
+		}
+
+#endif
 		std::clog << "\rDone.                 \n";
 		writePNG("output.png");
 	}
@@ -49,7 +68,9 @@ private:
 	int imageHeight;
 	float pixelSamplesScale;			// Color scale factor for a sum of pixel samples
 	std::vector<Color> pixels;
-	std::vector<Tile> tiles;
+
+	std::vector<Tile> tileQueue;
+	std::mutex queueMutex;
 
 	Point3 center;
 	Point3 pixel00Loc;
@@ -68,7 +89,7 @@ private:
 		{
 			for (int i = 0; i < imageWidth; i += tileSize)
 			{
-				tiles.push_back(Tile{
+				tileQueue.emplace_back(Tile{
 					i, j,
 					std::min(i + tileSize, imageWidth) - 1,
 					std::min(j + tileSize, imageHeight) - 1
@@ -162,6 +183,25 @@ private:
 		// If the ray is scattered, recursively gather light from the new ray
 		Color scatterColor = attenuation * rayColor(scattered, depth - 1, world);
 		return emissionColor + scatterColor;
+	}
+
+	void renderWorker(const Hittable& world)
+	{
+		// Continuously render the next tile from the queue
+		while (true)
+		{
+			Tile tile;
+
+			{
+				std::lock_guard<std::mutex> lock(queueMutex);
+				if (tileQueue.empty()) return;
+				tile = tileQueue.back();
+				tileQueue.pop_back();
+				std::clog << "\rTiles remaining: " << tileQueue.size() << " " << std::flush;
+			}
+
+			renderTile(tile, world);
+		}
 	}
 
 	void renderTile(const Tile& tile, const Hittable& world)

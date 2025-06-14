@@ -6,6 +6,11 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+struct Tile
+{
+	int x0, y0, x1, y1;
+};
+
 class Camera 
 {
 public:
@@ -14,6 +19,7 @@ public:
 	int samplesPerPixel = 10;
 	int maxDepth = 10;
 	Color background;
+	int tileSize = 16;
 
 	float vFov = 90.0f;
 	Point3 lookFrom = Point3(0.0f, 0.0f, 0.0f);
@@ -29,22 +35,10 @@ public:
 
 		// std::cout << "P3\n" << imageWidth << " " << imageHeight << "\n255\n";
 
-		for (int j = 0; j < imageHeight; j++) 
+		for (int i = 0; i < tiles.size(); i++)
 		{
-			std::clog << "\rScanlines remaining: " << (imageHeight - j) << " " << std::flush;
-			for (int i = 0; i < imageWidth; i++) 
-			{
-				Color pixelColor(0.0f, 0.0f, 0.0f);
-
-				for (int sample = 0; sample < samplesPerPixel; sample++) 
-				{
-					Ray ray = getRay(i, j);
-					pixelColor += rayColor(ray, maxDepth, world);
-					
-				}
-
-				setPixel(i, j, pixelSamplesScale * pixelColor);
-			}
+			std::clog << "\rTiles remaining: " << (tiles.size() - i) << " " << std::flush;
+			renderTile(tiles[i], world);
 		}
 
 		std::clog << "\rDone.                 \n";
@@ -55,6 +49,7 @@ private:
 	int imageHeight;
 	float pixelSamplesScale;			// Color scale factor for a sum of pixel samples
 	std::vector<Color> pixels;
+	std::vector<Tile> tiles;
 
 	Point3 center;
 	Point3 pixel00Loc;
@@ -67,6 +62,19 @@ private:
 		imageHeight = static_cast<int>(imageWidth / aspectRatio);
 		imageHeight = (imageHeight < 1) ? 1 : imageHeight;
 		pixels.resize(imageWidth * imageHeight, Color(0.0f, 0.0f, 0.0f));
+
+		// Tile the image into blocks for parallel processing
+		for (int j = 0; j < imageHeight; j += tileSize)
+		{
+			for (int i = 0; i < imageWidth; i += tileSize)
+			{
+				tiles.push_back(Tile{
+					i, j,
+					std::min(i + tileSize, imageWidth) - 1,
+					std::min(j + tileSize, imageHeight) - 1
+					});
+			}
+		}
 
 		pixelSamplesScale = 1.0f / samplesPerPixel;
 
@@ -154,6 +162,25 @@ private:
 		// If the ray is scattered, recursively gather light from the new ray
 		Color scatterColor = attenuation * rayColor(scattered, depth - 1, world);
 		return emissionColor + scatterColor;
+	}
+
+	void renderTile(const Tile& tile, const Hittable& world)
+	{
+		for (int j = tile.y0; j <= tile.y1; j++)
+		{
+			for (int i = tile.x0; i <= tile.x1; i++)
+			{
+				// Accumulate samples for each pixel
+				Color pixelColor(0.0f, 0.0f, 0.0f);
+				for (int sample = 0; sample < samplesPerPixel; sample++)
+				{
+					Ray ray = getRay(i, j);
+					pixelColor += rayColor(ray, maxDepth, world);
+				}
+
+				setPixel(i, j, pixelSamplesScale * pixelColor);
+			}
+		}
 	}
 
 	void setPixel(int x, int y, Color color)

@@ -20,13 +20,13 @@ inline float degreesToRadians(float degrees) {
 }
 
 inline float randomFloat() {
-	static std::mt19937 generator;
+	thread_local std::mt19937 generator;
 	std::uniform_real_distribution<float> distribution(0.0f, 1.0f);
 	return distribution(generator);
 }
 
 inline float randomFloat(float min, float max) {
-	static std::mt19937 generator;
+	thread_local std::mt19937 generator;
 	std::uniform_real_distribution<float> distribution(min, max);
 	return distribution(generator);
 }

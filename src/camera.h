@@ -197,7 +197,7 @@ private:
 				if (tileQueue.empty()) return;
 				tile = tileQueue.back();
 				tileQueue.pop_back();
-				std::clog << "\rTiles remaining: " << tileQueue.size() << " " << std::flush;
+				std::clog << "\rTiles remaining: " << tileQueue.size() + 1 << " " << std::flush;
 			}
 
 			renderTile(tile, world);

@@ -59,14 +59,17 @@ void bouncingSpheres() {
 	auto material3 = std::make_shared<Metal>(Color(0.7f, 0.6f, 0.5f), 0.0f);
 	world.add(std::make_shared<Sphere>(Point3(4.0f, 1.0f, 0.0f), 1.0f, material3));
 
+#define useBVH 1
+#if useBVH
 	world = HittableList(std::make_shared<BVHNode>(world));
+#endif
 
 	Camera camera;
 
 	camera.aspectRatio = 16.0f / 9.0f;
-	camera.imageWidth = 400;
-	camera.samplesPerPixel = 100;
-	camera.maxDepth = 10;
+	camera.imageWidth = 1200;
+	camera.samplesPerPixel = 500;
+	camera.maxDepth = 50;
 	camera.background = Color(0.7f, 0.8f, 1.0f);
 
 	camera.vFov = 20.0f;

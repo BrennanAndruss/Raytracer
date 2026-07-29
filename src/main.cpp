@@ -137,6 +137,32 @@ void earth()
 	camera.render(HittableList(globe));
 }
 
+void perlinSpheres()
+{
+	HittableList world;
+
+	auto perTex = std::make_shared<NoiseTexture>(4.0f);
+	world.add(std::make_shared<Sphere>(Point3(0.0f, -1000.0f, 0.0f), 1000.0f, std::make_shared<Lambertian>(perTex)));
+	world.add(std::make_shared<Sphere>(Point3(0.0f, 2.0f, 0.0f), 2.0f, std::make_shared<Lambertian>(perTex)));
+
+	Camera camera;
+
+	camera.aspectRatio = 16.0f / 9.0f;
+	camera.imageWidth = 400;
+	camera.samplesPerPixel = 100;
+	camera.maxDepth = 50;
+	camera.background = Color(0.7f, 0.8f, 1.0f);
+
+	camera.vFov = 20;
+	camera.lookFrom = Point3(13.0f, 2.0f, 3.0f);
+	camera.lookAt = Point3(0.0f, 0.0f, 0.0f);
+	camera.viewUp = Vec3(0.0f, 1.0f, 0.0f);
+
+	camera.defocusAngle = 0;
+	
+	camera.render(world);
+}
+
 void quads()
 {
 	HittableList world;
@@ -254,8 +280,9 @@ int main(int argc, char* argv[])
 	case 1: bouncingSpheres(); break;
 	case 2: checkeredSpheres(); break;
 	case 3: earth(); break;
-	case 4: quads(); break;
-	case 5: cornellBox(); break;
+	case 4: perlinSpheres(); break;
+	case 5: quads(); break;
+	case 6: cornellBox(); break;
 	default: bouncingSpheres(); break;
 	}
 

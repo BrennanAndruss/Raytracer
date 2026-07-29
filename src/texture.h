@@ -1,5 +1,6 @@
 #pragma once
 
+#include "perlin.h"
 #include "rtw_stb_image.h"
 
 class Texture
@@ -73,5 +74,21 @@ public:
 
 		auto colorScale = 1.0f / 255.0f;
 		return Color(colorScale * pixel[0], colorScale * pixel[1], colorScale * pixel[2]);
+	}
+};
+
+class NoiseTexture : public Texture
+{
+private:
+	Perlin noise;
+	float scale;
+
+public:
+	NoiseTexture(float scale) : scale(scale) {}
+
+	Color value(float u, float v, const Point3& p) const override
+	{
+		return Color(0.5f, 0.5f, 0.5f) * 
+			(1 + std::sin(scale * p.z + 10 * noise.turbulence(p, 7)));
 	}
 };

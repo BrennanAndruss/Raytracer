@@ -2,6 +2,7 @@
 
 #include "bvh.h"
 #include "camera.h"
+#include "constant_medium.h"
 #include "hittable.h"
 #include "hittable_list.h"
 #include "material.h"
@@ -251,6 +252,56 @@ void cornellBox()
 	camera.render(world);
 }
 
+void cornellSmoke()
+{
+	HittableList world;
+
+	auto red = std::make_shared<Lambertian>(Color(0.65f, 0.05f, 0.05f));
+	auto white = std::make_shared<Lambertian>(Color(0.73f, 0.73f, 0.73f));
+	auto green = std::make_shared<Lambertian>(Color(0.12f, 0.45f, 0.15f));
+	auto light = std::make_shared<DiffuseLight>(Color(15.0f, 15.0f, 15.0f));
+
+	world.add(std::make_shared<Quad>(Point3(555.0f, 0.0f, 0.0f),
+		Vec3(0.0f, 555.0f, 0.0f), Vec3(0.0f, 0.0f, 555.0f), green));
+	world.add(std::make_shared<Quad>(Point3(0.0f, 0.0f, 0.0f),
+		Vec3(0.0f, 555.0f, 0.0f), Vec3(0.0f, 0.0f, 555.0f), red));
+	world.add(std::make_shared<Quad>(Point3(343.0f, 554.0f, 332.0f),
+		Vec3(-130.0f, 0.0f, 0.0f), Vec3(0, 0, -105), light));
+	world.add(std::make_shared<Quad>(Point3(0.0f, 0.0f, 0.0f),
+		Vec3(555.0f, 0.0f, 0.0f), Vec3(0.0f, 0.0f, 555.0f), white));
+	world.add(std::make_shared<Quad>(Point3(555.0f, 555.0f, 555.0f),
+		Vec3(-555.0f, 0.0f, 0.0f), Vec3(0.0f, 0.0f, -555.0f), white));
+	world.add(std::make_shared<Quad>(Point3(0.0f, 0.0f, 555.0f),
+		Vec3(555.0f, 0.0f, 0.0f), Vec3(0.0f, 555.0f, 0.0f), white));
+
+	std::shared_ptr<Hittable> box1 = box(Point3(0.0f, 0.0f, 0.0f), Point3(165.0f, 330.0f, 165.0f), white);
+	box1 = std::make_shared<RotateY>(box1, 15.0f);
+	box1 = std::make_shared<Translate>(box1, Vec3(265.0f, 0.0f, 295.0f));
+	world.add(std::make_shared<ConstantMedium>(box1, 0.01f, Color(0.0f, 0.0f, 0.0f)));
+
+	std::shared_ptr<Hittable> box2 = box(Point3(0.0f, 0.0f, 0.0f), Point3(165.0f, 165.0f, 165.0f), white);
+	box2 = std::make_shared<RotateY>(box2, -18.0f);
+	box2 = std::make_shared<Translate>(box2, Vec3(130.0f, 0.0f, 65.0f));
+	world.add(std::make_shared<ConstantMedium>(box2, 0.01f, Color(1.0f, 1.0f, 1.0f)));
+
+	Camera camera;
+
+	camera.aspectRatio = 1.0f;
+	camera.imageWidth = 600;
+	camera.samplesPerPixel = 200;
+	camera.maxDepth = 50;
+	camera.background = Color(0.0f, 0.0f, 0.0f);
+
+	camera.vFov = 40.0f;
+	camera.lookFrom = Point3(278.0f, 278.0f, -800.0f);
+	camera.lookAt = Point3(278.0f, 278.0f, 0.0f);
+	camera.viewUp = Vec3(0.0f, 1.0f, 0.0f);
+
+	camera.defocusAngle = 0.0f;
+
+	camera.render(world);
+}
+
 int main(int argc, char* argv[])
 {
 	// Select the scene to render using command line arguments
@@ -283,6 +334,7 @@ int main(int argc, char* argv[])
 	case 4: perlinSpheres(); break;
 	case 5: quads(); break;
 	case 6: cornellBox(); break;
+	case 7: cornellSmoke(); break;
 	default: bouncingSpheres(); break;
 	}
 

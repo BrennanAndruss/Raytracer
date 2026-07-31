@@ -4,8 +4,8 @@ A software raytracing engine built in native C++ for rendering 3D scenes. This p
 
 ## 📝 Features
 
-- Utilizes ray-object intersections, shading techniques, antialiasing, gamma correction, texture mapping, and more
-- Supports diffuse, metal, dielectric, and emissive materials, simulating accurate light reflection, refraction, and scattering
+- Utilizes ray-object intersections, shading techniques, antialiasing, gamma correction, texture mapping, Perlin noise generation, and more
+- Supports diffuse, metal, dielectric, emissive, and isotropic materials, simulating accurate light reflection, refraction, and scattering
 - Includes lighting objects and a positionable virtual camera with defocus blur, motion blur, and customizable dimensions
 - Implements a bounding volume hierarchy to accelerate ray-world intersections (4.6x speedup) and multithreading using a custom thread pool to further improve performance (16x speedup), optimizing performance by 98.6%
 - Additional features in progress...
@@ -58,6 +58,13 @@ A collection of sample scenes are provided in main.cpp showing off various featu
 - Bounce lighting from colored quads on transformed box instances
 - 1200x1200 pixels, 500 sampled rays per pixel, 50 ray bounce limit
 - Rendered in 1015 seconds
+
+### All Features
+
+![All Features](./images/all_features.png)
+- Motion blur, thin mist, subsurface reflection, textures, instancing, and more
+- 800x800 pixels, 10000 sampled rays per pixel, 40 bounce limit
+- Rendered in 13 hours
 
 ## 📚 Reference
 

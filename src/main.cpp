@@ -302,6 +302,89 @@ void cornellSmoke()
 	camera.render(world);
 }
 
+void finalScene(int imageWidth, int samplesPerPixel, int maxDepth)
+{
+	HittableList boxes1;
+	auto ground = std::make_shared<Lambertian>(Color(0.48f, 0.83f, 0.53f));
+
+	int boxesPerSide = 20;
+	for (int i = 0; i < boxesPerSide; i++)
+	{
+		for (int j = 0; j < boxesPerSide; j++)
+		{
+			auto w = 100.0f;
+			auto x0 = -1000.0f + i * w;
+			auto z0 = -1000.0f + j * w;
+			auto y0 = 0.0f;
+			auto x1 = x0 + w;
+			auto y1 = randomFloat(1.0f, 101.0f);
+			auto z1 = z0 + w;
+
+			boxes1.add(box(Point3(z0, y0, z0), Point3(x1, y1, z1), ground));
+		}
+	}
+
+	HittableList world;
+
+	world.add(std::make_shared<BVHNode>(boxes1));
+
+	auto light = std::make_shared<DiffuseLight>(Color(7.0f, 7.0f, 7.0f));
+	world.add(std::make_shared<Quad>(Point3(123.0f, 554.0f, 147.0f), Vec3(300.0f, 0.0f, 0.0f), Vec3(0.0f, 0.0f, 265.0f), light));
+
+	auto center1 = Point3(400.0f, 400.0f, 200.0f);
+	auto center2 = center1 + Vec3(30.0f, 0.0f, 0.0f);
+	auto sphere_material = std::make_shared<Lambertian>(Color(0.7f, 0.3f, 0.1f));
+	world.add(std::make_shared<Sphere>(center1, center2, 50.0f, sphere_material));
+
+	world.add(std::make_shared<Sphere>(Point3(260.0f, 150.0f, 45.0f), 50.0f, std::make_shared<Dielectric>(1.5)));
+	world.add(std::make_shared<Sphere>(
+		Point3(0.0f, 150.0f, 145.0f), 50.0f, std::make_shared<Metal>(Color(0.8f, 0.8f, 0.9f), 1.0f)
+	));
+
+	auto boundary = std::make_shared<Sphere>(Point3(360.0f, 150.0f, 145.0f), 70.0f, std::make_shared<Dielectric>(1.5));
+	world.add(boundary);
+	world.add(std::make_shared<ConstantMedium>(boundary, 0.2f, Color(0.2f, 0.4f, 0.9f)));
+	boundary = std::make_shared<Sphere>(Point3(0.0f, 0.0f, 0.0f), 5000.0f, std::make_shared<Dielectric>(1.5));
+	world.add(std::make_shared<ConstantMedium>(boundary, .0001f, Color(1.0f, 1.0f, 1.0f)));
+
+	auto emat = std::make_shared<Lambertian>(std::make_shared<ImageTexture>("earthmap.jpg"));
+	world.add(std::make_shared<Sphere>(Point3(400.0f, 200.0f, 400.0f), 100.0f, emat));
+	auto pertext = std::make_shared<NoiseTexture>(0.2f);
+	world.add(std::make_shared<Sphere>(Point3(220.0f, 280.0f, 300.0f), 80.0f, std::make_shared<Lambertian>(pertext)));
+
+	HittableList boxes2;
+	auto white = std::make_shared<Lambertian>(Color(0.73f, 0.73f, 0.73f));
+	int ns = 1000;
+	for (int j = 0; j < ns; j++)
+	{
+		boxes2.add(std::make_shared<Sphere>(Point3::random(0.0f, 165.0f), 10.0f, white));
+	}
+
+	world.add(std::make_shared<Translate>(
+		std::make_shared<RotateY>(
+			std::make_shared<BVHNode>(boxes2), 15.0f),
+		Vec3(-100.0f, 270.0f, 395.0f)
+	)
+	);
+
+	Camera cam;
+
+	cam.aspectRatio = 1.0;
+	cam.imageWidth = imageWidth;
+	cam.samplesPerPixel = samplesPerPixel;
+	cam.maxDepth = maxDepth;
+	cam.background = Color(0.0f, 0.0f, 0.0f);
+
+	cam.vFov = 40;
+	cam.lookFrom = Point3(478.0f, 278.0f, -600.0f);
+	cam.lookAt = Point3(278.0f, 278.0f, 0.0f);
+	cam.viewUp = Vec3(0.0f, 1.0f, 0.0f);
+
+	cam.defocusAngle = 0.0f;
+
+	cam.render(world);
+}
+
 int main(int argc, char* argv[])
 {
 	// Select the scene to render using command line arguments
@@ -335,7 +418,8 @@ int main(int argc, char* argv[])
 	case 5: quads(); break;
 	case 6: cornellBox(); break;
 	case 7: cornellSmoke(); break;
-	default: bouncingSpheres(); break;
+	case 8: finalScene(800, 10000, 40); break;
+	default: finalScene(400, 250, 4); break;
 	}
 
 	auto end = std::chrono::high_resolution_clock::now();

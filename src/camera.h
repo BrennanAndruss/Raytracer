@@ -67,6 +67,8 @@ public:
 private:
 	int imageHeight;
 	float pixelSamplesScale;			// Color scale factor for a sum of pixel samples
+	int sqrtSpp;
+	float recipSqrtSpp;
 	std::vector<Color> pixels;
 
 	std::vector<Tile> tileQueue;
@@ -84,6 +86,12 @@ private:
 		imageHeight = (imageHeight < 1) ? 1 : imageHeight;
 		pixels.resize(imageWidth * imageHeight, Color(0.0f, 0.0f, 0.0f));
 
+		sqrtSpp = static_cast<int>(std::sqrt(samplesPerPixel));
+		pixelSamplesScale = 1.0f / samplesPerPixel;
+		recipSqrtSpp = 1.0f / sqrtSpp;
+
+		center = lookFrom;
+
 		// Tile the image into blocks for parallel processing
 		for (int j = 0; j < imageHeight; j += tileSize)
 		{
@@ -96,10 +104,6 @@ private:
 					});
 			}
 		}
-
-		pixelSamplesScale = 1.0f / samplesPerPixel;
-
-		center = lookFrom;
 
 		// Determine viewport dimensions
 		float theta = degreesToRadians(vFov);
@@ -131,12 +135,12 @@ private:
 		defocusDiskV = defocusRadius * v;
 	}
 
-	Ray getRay(int i, int j) const 
+	Ray getRay(int i, int j, int si, int sj) const 
 	{
 		// Construct a camera ray originating from the defocus disk and driected at randomly
 		// sampled point around the pixel location i, j
 
-		Vec3 offset = sampleSquare();
+		Vec3 offset = sampleSquareStratified(si, sj);
 		Point3 pixelSample = 
 			pixel00Loc + (i + offset.x) * pixelDeltaU + (j + offset.y) * pixelDeltaV;
 
@@ -151,6 +155,15 @@ private:
 	{
 		// Returns the vector to a random point in the [-.5, -.5]-[+.5, +.5] square
 		return Vec3(randomFloat() - 0.5f, randomFloat() - 0.5f, 0.0f);
+	}
+
+	Vec3 sampleSquareStratified(int si, int sj) const
+	{
+		// Returns the vector to a random point in the square sub-pixel specified by grid
+		// indices si and sj, for an idealized unit square pixel [-.5, -.5]-[+.5, +.5]
+		float px = ((si + randomFloat()) * recipSqrtSpp) - 0.5f;
+		float py = ((sj + randomFloat()) * recipSqrtSpp) - 0.5f;
+		return Vec3(px, py, 0.0f);
 	}
 
 	Point3 defocusDiskSample() const 
@@ -210,12 +223,15 @@ private:
 		{
 			for (int i = tile.x0; i <= tile.x1; i++)
 			{
-				// Accumulate samples for each pixel
+				// Accumulate stratified samples for each pixel
 				Color pixelColor(0.0f, 0.0f, 0.0f);
-				for (int sample = 0; sample < samplesPerPixel; sample++)
+				for (int sj = 0; sj < sqrtSpp; sj++)
 				{
-					Ray ray = getRay(i, j);
-					pixelColor += rayColor(ray, maxDepth, world);
+					for (int si = 0; si < sqrtSpp; si++)
+					{
+						Ray ray = getRay(i, j, si, sj);
+						pixelColor += rayColor(ray, maxDepth, world);
+					}
 				}
 
 				setPixel(i, j, pixelSamplesScale * pixelColor);

@@ -188,13 +188,18 @@ private:
 
 		Ray scattered;
 		Color attenuation;
+		float PDF;
 		Color emissionColor = record.mat->emitted(record.u, record.v, record.p);
 		
-		if (!record.mat->scatter(ray, record, attenuation, scattered))
+		if (!record.mat->scatter(ray, record, attenuation, scattered, PDF))
 			return emissionColor;
 		
 		// If the ray is scattered, recursively gather light from the new ray
-		Color scatterColor = attenuation * rayColor(scattered, depth - 1, world);
+		float scatteringPDF = record.mat->scatteringPDF(ray, record, scattered);
+		PDF = scatteringPDF;
+
+		Color scatterColor = 
+			(attenuation * scatteringPDF * rayColor(scattered, depth - 1, world)) / PDF;
 		return emissionColor + scatterColor;
 	}
 

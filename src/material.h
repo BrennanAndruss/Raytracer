@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hittable.h"
+#include "orthonormal_basis.h"
 #include "texture.h"
 
 class Material 
@@ -14,10 +15,17 @@ public:
 	}
 
 	virtual bool scatter(
-		const Ray& rayIn, const HitRecord& hitRecord, Color& attenuation, Ray& scattered
+		const Ray& rayIn, const HitRecord& record, Color& attenuation, Ray& scattered, float& PDF
 	) const 
 	{
 		return false;
+	}
+
+	virtual float scatteringPDF(
+		const Ray& rayIn, const HitRecord& record, const Ray& scattered
+	) const
+	{
+		return 0.0f;
 	}
 };
 
@@ -31,17 +39,24 @@ public:
 	Lambertian(std::shared_ptr<Texture> texture) : texture(texture) {}
 
 	bool scatter(
-		const Ray& rayIn, const HitRecord& record, Color& attenuation, Ray& scattered
+		const Ray& rayIn, const HitRecord& record, Color& attenuation, Ray& scattered, float& PDF
 	) const override 
 	{
-		auto scatterDir = record.normal + randomUnitVector();
+		OrthonormalBasis uvw(record.normal);
+		auto scatterDir = uvw.transform(randomCosineDirection());
 
-		if (scatterDir.nearZero())
-			scatterDir = record.normal;
-		
-		scattered = Ray(record.p, scatterDir, rayIn.time);
+		scattered = Ray(record.p, normalize(scatterDir), rayIn.time);
 		attenuation = texture->value(record.u, record.v, record.p);
+		PDF = dot(uvw.w(), scattered.dir / pi);
 		return true;
+	}
+
+	float scatteringPDF(
+		const Ray& rayIn, const HitRecord& record, const Ray& scattered
+	) const override
+	{
+		auto cosTheta = dot(record.normal, normalize(scattered.dir));
+		return cosTheta < 0 ? 0.0f : cosTheta / pi;
 	}
 };
 
@@ -54,7 +69,7 @@ public:
 	Metal(const Color& albedo, float fuzz) : albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1) {}
 
 	bool scatter(
-		const Ray& rayIn, const HitRecord& record, Color& attenuation, Ray& scattered
+		const Ray& rayIn, const HitRecord& record, Color& attenuation, Ray& scattered, float& PDF
 	) const override 
 	{
 		Vec3 reflected = reflect(rayIn.dir, record.normal);
@@ -74,7 +89,7 @@ public:
 	Dielectric(float refractionIndex) : refractionIndex(refractionIndex) {}
 
 	bool scatter(
-		const Ray& rayIn, const HitRecord& record, Color& attenuation, Ray& scattered
+		const Ray& rayIn, const HitRecord& record, Color& attenuation, Ray& scattered, float& PDF
 	) const override 
 	{
 		float refractionRatio = record.frontFace ? (1.0f / refractionIndex) : refractionIndex;
@@ -134,11 +149,19 @@ public:
 	Isotropic(std::shared_ptr<Texture> tex) : tex(tex) {}
 
 	bool scatter(
-		const Ray& rayIn, const HitRecord& record, Color& attenuation, Ray& scattered
+		const Ray& rayIn, const HitRecord& record, Color& attenuation, Ray& scattered, float& PDF
 	) const override
 	{
 		scattered = Ray(record.p, randomUnitVector(), rayIn.time);
 		attenuation = tex->value(record.u, record.v, record.p);
+		PDF = 1 / (4 * pi);
 		return true;
+	}
+
+	float scatteringPDF(
+		const Ray& rayIn, const HitRecord& record, const Ray& scattered
+	) const override
+	{
+		return 1 / (4 * pi);
 	}
 };

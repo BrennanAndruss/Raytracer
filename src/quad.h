@@ -13,6 +13,7 @@ private:
 	AABB bbox;
 	Vec3 normal;
 	float d;
+	float area;
 
 public:
 	Quad(const Point3& q, const Vec3& u, const Vec3& v, std::shared_ptr<Material> mat)
@@ -22,6 +23,7 @@ public:
 		normal = normalize(n);
 		d = dot(normal, q);
 		w = n / dot(n, n);
+		area = mag(n);
 
 		setBoundingBox();
 	}
@@ -75,6 +77,24 @@ public:
 	}
 
 	AABB boundingBox() const override { return bbox; }
+
+	float pdfValue(const Point3& origin, const Vec3& direction) const override
+	{
+		HitRecord record;
+		if (!hit(Ray(origin, direction), Interval(0.001f, infinity), record))
+			return 0.0f;
+
+		auto distSquared = record.t * record.t * sqrMag(direction);
+		auto cosine = std::fabs(dot(direction, record.normal) / mag(direction));
+
+		return distSquared / (cosine * area);
+	}
+
+	Vec3 random(const Point3& origin) const override
+	{
+		Point3 p = q + randomFloat() * u + randomFloat() * v;
+		return p - origin;
+	}
 };
 
 inline std::shared_ptr<HittableList> box(const Point3& a, const Point3& b, std::shared_ptr<Material> mat)

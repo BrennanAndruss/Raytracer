@@ -9,9 +9,11 @@ class Material
 public:
 	virtual ~Material() = default;
 
-	virtual Color emitted(float u, float v, const Point3& p) const
+	virtual Color emitted(
+		const Ray& rayIn, const HitRecord& record, float u, float v, const Point3& p
+	) const
 	{
-		return Color(0.0f, 0.0f, 0.0f);
+		return Color(0.0f);
 	}
 
 	virtual bool scatter(
@@ -111,7 +113,7 @@ public:
 		}
 
 		scattered = Ray(record.p, direction, rayIn.time);
-		attenuation = Color(1.0f, 1.0f, 1.0f);
+		attenuation = Color(1.0f);
 		return true;
 	}
 
@@ -133,8 +135,12 @@ public:
 	DiffuseLight(std::shared_ptr<Texture> tex) : tex(tex) {}
 	DiffuseLight(const Color& emit) : tex(std::make_shared<SolidColor>(emit)) {}
 
-	color emitted(float u, float v, const Point3& p) const override
+	color emitted(
+		const Ray& rayIn, const HitRecord& record, float u, float v, const Point3& p
+	) const override
 	{
+		if (!record.frontFace)
+			return Color(0.0f);
 		return tex->value(u, v, p);
 	}
 };

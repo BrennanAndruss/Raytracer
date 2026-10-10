@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hittable.h"
+#include "pdf.h"
 #include "material.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -32,7 +33,7 @@ public:
 	float defocusAngle = 0.0f;
 	float focusDist = 1.0f;
 
-	void render(const Hittable& world) 
+	void render(const Hittable& world, const Hittable& lights) 
 	{
 		initialize();
 
@@ -45,7 +46,7 @@ public:
 
 		for (int i = 0; i < threadCount; i++)
 		{
-			threads.emplace_back(&Camera::renderWorker, this, std::ref(world));
+			threads.emplace_back(&Camera::renderWorker, this, std::ref(world), std::ref(lights));
 		}
 
 		// Wait for all threads to finish rendering
@@ -173,7 +174,9 @@ private:
 		return center + p.x * defocusDiskU + p.y * defocusDiskV;
 	}
 
-	Color rayColor(const Ray& ray, int depth, const Hittable& world) const 
+	Color rayColor(
+		const Ray& ray, int depth, const Hittable& world, const Hittable& lights
+	) const 
 	{
 		// If the ray bounce limit is exceeded, no more light is gathered
 		if (depth <= 0) {
@@ -188,22 +191,29 @@ private:
 
 		Ray scattered;
 		Color attenuation;
-		float PDF;
-		Color emissionColor = record.mat->emitted(record.u, record.v, record.p);
+		float pdfValue;
+		Color emissionColor = record.mat->emitted(ray, record, record.u, record.v, record.p);
 		
-		if (!record.mat->scatter(ray, record, attenuation, scattered, PDF))
+		if (!record.mat->scatter(ray, record, attenuation, scattered, pdfValue))
 			return emissionColor;
 		
 		// If the ray is scattered, recursively gather light from the new ray
-		float scatteringPDF = record.mat->scatteringPDF(ray, record, scattered);
-		PDF = scatteringPDF;
+		auto lightPDF = std::make_shared<HittablePDF>(lights, record.p);
+		auto surfacePDF = std::make_shared<CosinePDF>(record.normal);
+		MixturePDF mixedPDF(lightPDF, surfacePDF);
 
-		Color scatterColor = 
-			(attenuation * scatteringPDF * rayColor(scattered, depth - 1, world)) / PDF;
+		scattered = Ray(record.p, mixedPDF.generate(), ray.time);
+		pdfValue = mixedPDF.value(scattered.dir);
+
+		float scatteringPDF = record.mat->scatteringPDF(ray, record, scattered);
+
+		Color sampleColor = rayColor(scattered, depth - 1, world, lights);
+		Color scatterColor = (attenuation * scatteringPDF * sampleColor) / pdfValue;
+
 		return emissionColor + scatterColor;
 	}
 
-	void renderWorker(const Hittable& world)
+	void renderWorker(const Hittable& world, const Hittable& lights)
 	{
 		// Continuously render the next tile from the queue
 		while (true)
@@ -218,11 +228,11 @@ private:
 				std::clog << "\rTiles remaining: " << tileQueue.size() + 1 << " " << std::flush;
 			}
 
-			renderTile(tile, world);
+			renderTile(tile, world, lights);
 		}
 	}
 
-	void renderTile(const Tile& tile, const Hittable& world)
+	void renderTile(const Tile& tile, const Hittable& world, const Hittable& lights)
 	{
 		for (int j = tile.y0; j <= tile.y1; j++)
 		{
@@ -235,7 +245,7 @@ private:
 					for (int si = 0; si < sqrtSpp; si++)
 					{
 						Ray ray = getRay(i, j, si, sj);
-						pixelColor += rayColor(ray, maxDepth, world);
+						pixelColor += rayColor(ray, maxDepth, world, lights);
 					}
 				}
 

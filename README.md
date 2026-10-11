@@ -5,7 +5,7 @@ A software Monte Carlo path tracing engine built in native C++ for rendering 3D 
 ## 📝 Features
 
 - Utilizes Monte Carlo integration, importance sampling, antialiasing, gamma correction, reflection, refraction, and scattering
-- Features instancing, texture mapping, Perlin noise generation, emissive objects, defocus blur, motion blur, metal and dielectric materials, and more
+- Features instancing, texture mapping, Perlin noise generation, emissive objects, defocus blur, motion blur, metal and dielectric materials, participating media, and more
 - Implements a bounding volume hierarchy to accelerate ray-world intersections (4.6x speedup) and multithreading using a custom thread pool to further improve performance (16x speedup), optimizing performance by 98.6%
 - Further profiling and optimizations in progress...
 

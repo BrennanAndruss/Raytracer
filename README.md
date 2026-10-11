@@ -1,20 +1,19 @@
 # 🎥 Raytracer
 
-A software raytracing engine built in native C++ for rendering 3D scenes. This project was my first project in C++ and my introduction to several computer graphics concepts.
+A software Monte Carlo path tracing engine built in native C++ for rendering 3D scenes. This project was my first project in C++ and my introduction to several computer graphics concepts.
 
 ## 📝 Features
 
-- Utilizes ray-object intersections, shading techniques, antialiasing, gamma correction, texture mapping, Perlin noise generation, and more
-- Supports diffuse, metal, dielectric, emissive, and isotropic materials, simulating accurate light reflection, refraction, and scattering
-- Includes lighting objects and a positionable virtual camera with defocus blur, motion blur, and customizable dimensions
+- Utilizes Monte Carlo integration, importance sampling, antialiasing, gamma correction, reflection, refraction, and scattering
+- Features instancing, texture mapping, Perlin noise generation, emissive objects, defocus blur, motion blur, metal and dielectric materials, and more
 - Implements a bounding volume hierarchy to accelerate ray-world intersections (4.6x speedup) and multithreading using a custom thread pool to further improve performance (16x speedup), optimizing performance by 98.6%
-- Additional features in progress...
+- Further profiling and optimizations in progress...
 
 ## 🔍 What I Learned
 
-- Programming in C++, covering syntax, conventions, the standard library, multithreaded programming, and specific C++ features
+- Programming in C++, covering syntax, conventions, the standard library, and multithreaded programming
 - Foundational concepts in computer graphics applied through raytracing
-- The mathematical foundations behind ray tracing, including linear algebra, geometry, and optics
+- The mathematical foundations behind ray tracing, including linear algebra, geometry, statistics, and optics
 - Setting up build systems for C++ projects, including CMake and Visual Studio, and importing external libraries
 
 ## 🛠️ Build and Run
@@ -42,6 +41,8 @@ A collection of sample scenes are provided in main.cpp showing off various featu
 ```
 
 ## 🖼️ Results
+
+Note: Featured scenes rendered prior to Monte Carlo integration
 
 ### Sphere Scene
 

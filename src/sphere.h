@@ -18,6 +18,19 @@ private:
 		v = theta / pi;
 	}
 
+	static Vec3 randomToSphere(float radius, float distSquared)
+	{
+		auto r1 = randomFloat();
+		auto r2 = randomFloat();
+		float z = 1.0f + r2 * (std::sqrt(1.0f - radius * radius / distSquared) - 1.0f);
+
+		float phi = 2.0f * pi * r1;
+		float x = std::cos(phi) * std::sqrt(1.0f - z * z);
+		float y = std::sin(phi) * std::sqrt(1.0f - z * z);
+
+		return Vec3(x, y, z);
+	}
+
 public:
 	// Stationary Sphere
 	Sphere(const Point3& staticCenter, float radius, std::shared_ptr<Material> mat)
@@ -73,4 +86,27 @@ public:
 	}
 
 	AABB boundingBox() const override { return bbox; }
+
+	float pdfValue(const Point3& origin, const Vec3& direction) const override
+	{
+		HitRecord rec;
+		if (!hit(Ray(origin, direction), Interval(0.001f, infinity), rec))
+			return 0;
+
+		// Sample the center at time 0
+		// This method only works for stationary spheres
+		float distSquared = sqrMag(center.at(0.0f) - origin);
+		float cosThetaMax = std::sqrt(1.0f - radius * radius / distSquared);
+		float solidAngle = 2.0f * pi * (1.0f - cosThetaMax);
+
+		return 1.0f / solidAngle;
+	}
+
+	Vec3 random(const Point3& origin) const override
+	{
+		Vec3 direction = center.at(0.0f) - origin;
+		float distSquared = sqrMag(direction);
+		OrthonormalBasis uvw(direction);
+		return uvw.transform(randomToSphere(radius, distSquared));
+	}
 };

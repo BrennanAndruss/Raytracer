@@ -183,32 +183,34 @@ private:
 			return Color(0.0f, 0.0f, 0.0f);
 		}
 
-		HitRecord record;
+		HitRecord hitRec;
 
 		// If the ray hits noting, return the background color
-		if (!world.hit(ray, Interval(0.001f, infinity), record))
+		if (!world.hit(ray, Interval(0.001f, infinity), hitRec))
 			return background;
 
-		Ray scattered;
-		Color attenuation;
-		float pdfValue;
-		Color emissionColor = record.mat->emitted(ray, record, record.u, record.v, record.p);
+		ScatterRecord scatterRec;
+		Color emissionColor = hitRec.mat->emitted(ray, hitRec, hitRec.u, hitRec.v, hitRec.p);
 		
-		if (!record.mat->scatter(ray, record, attenuation, scattered, pdfValue))
+		if (!hitRec.mat->scatter(ray, hitRec, scatterRec))
 			return emissionColor;
+
+		// Skip PDF values for materials treated specularly
+		// Recursively gather light from an implicitly sampled ray
+		if (scatterRec.skipPdf)
+			return scatterRec.attenuation * rayColor(scatterRec.skipPdfRay, depth - 1, world, lights);
 		
 		// If the ray is scattered, recursively gather light from the new ray
-		auto lightPDF = std::make_shared<HittablePDF>(lights, record.p);
-		auto surfacePDF = std::make_shared<CosinePDF>(record.normal);
-		MixturePDF mixedPDF(lightPDF, surfacePDF);
+		auto lightPDF = std::make_shared<HittablePDF>(lights, hitRec.p);
+		MixturePDF mixedPDF(lightPDF, scatterRec.PDF);
 
-		scattered = Ray(record.p, mixedPDF.generate(), ray.time);
-		pdfValue = mixedPDF.value(scattered.dir);
+		Ray scattered = Ray(hitRec.p, mixedPDF.generate(), ray.time);
+		float pdfValue = mixedPDF.value(scattered.dir);
 
-		float scatteringPDF = record.mat->scatteringPDF(ray, record, scattered);
+		float scatteringPDF = hitRec.mat->scatteringPDF(ray, hitRec, scattered);
 
 		Color sampleColor = rayColor(scattered, depth - 1, world, lights);
-		Color scatterColor = (attenuation * scatteringPDF * sampleColor) / pdfValue;
+		Color scatterColor = (scatterRec.attenuation * scatteringPDF * sampleColor) / pdfValue;
 
 		return emissionColor + scatterColor;
 	}
@@ -276,10 +278,21 @@ private:
 			{
 				int index = (j * imageWidth + i);
 
+				float r = pixels[index].x;
+				float g = pixels[index].y;
+				float b = pixels[index].z;
+
+				//std::cout << r << " " << g << " " << b << std::endl;
+
+				// Replace NaN components with 0
+				if (std::isnan(r)) r = 0.0f;
+				if (std::isnan(g)) g = 0.0f;
+				if (std::isnan(b)) b = 0.0f;
+
 				// Apply a linear to gamma transformation for gamma 2
-				auto r = linearToGamma(pixels[index].x);
-				auto g = linearToGamma(pixels[index].y);
-				auto b = linearToGamma(pixels[index].z);
+				r = linearToGamma(r);
+				g = linearToGamma(g);
+				b = linearToGamma(b);
 
 				index *= 3;
 				static const Interval intensity(0.0f, 0.999f);

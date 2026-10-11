@@ -1,8 +1,17 @@
 #pragma once
 
 #include "hittable.h"
-#include "orthonormal_basis.h"
+#include "pdf.h"
 #include "texture.h"
+
+class ScatterRecord
+{
+public:
+	Color attenuation;
+	std::shared_ptr<PDF> PDF;
+	bool skipPdf;
+	Ray skipPdfRay;
+};
 
 class Material 
 {
@@ -17,7 +26,7 @@ public:
 	}
 
 	virtual bool scatter(
-		const Ray& rayIn, const HitRecord& record, Color& attenuation, Ray& scattered, float& PDF
+		const Ray& rayIn, const HitRecord& hitRec, ScatterRecord& scatterRec
 	) const 
 	{
 		return false;
@@ -34,22 +43,19 @@ public:
 class Lambertian : public Material 
 {
 private:
-	std::shared_ptr<Texture> texture;
+	std::shared_ptr<Texture> tex;
 
 public:
-	Lambertian(const Color& albedo) : texture(std::make_shared<SolidColor>(albedo)) {}
-	Lambertian(std::shared_ptr<Texture> texture) : texture(texture) {}
+	Lambertian(const Color& albedo) : tex(std::make_shared<SolidColor>(albedo)) {}
+	Lambertian(std::shared_ptr<Texture> texture) : tex(texture) {}
 
 	bool scatter(
-		const Ray& rayIn, const HitRecord& record, Color& attenuation, Ray& scattered, float& PDF
+		const Ray& rayIn, const HitRecord& hitRec, ScatterRecord& scatterRec
 	) const override 
 	{
-		OrthonormalBasis uvw(record.normal);
-		auto scatterDir = uvw.transform(randomCosineDirection());
-
-		scattered = Ray(record.p, normalize(scatterDir), rayIn.time);
-		attenuation = texture->value(record.u, record.v, record.p);
-		PDF = dot(uvw.w(), scattered.dir / pi);
+		scatterRec.attenuation = tex->value(hitRec.u, hitRec.v, hitRec.p);
+		scatterRec.PDF = std::make_shared<CosinePDF>(hitRec.normal);
+		scatterRec.skipPdf = false;
 		return true;
 	}
 
@@ -71,14 +77,18 @@ public:
 	Metal(const Color& albedo, float fuzz) : albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1) {}
 
 	bool scatter(
-		const Ray& rayIn, const HitRecord& record, Color& attenuation, Ray& scattered, float& PDF
+		const Ray& rayIn, const HitRecord& hitRec, ScatterRecord& scatterRec
 	) const override 
 	{
-		Vec3 reflected = reflect(rayIn.dir, record.normal);
+		Vec3 reflected = reflect(rayIn.dir, hitRec.normal);
 		reflected = normalize(reflected) + (fuzz * randomUnitVector());
-		scattered = Ray(record.p, reflected, rayIn.time);
-		attenuation = albedo;
-		return (dot(scattered.dir, record.normal) > 0);
+
+		scatterRec.attenuation = albedo;
+		scatterRec.PDF = nullptr;
+		scatterRec.skipPdf = true;
+		scatterRec.skipPdfRay =  Ray(hitRec.p, reflected, rayIn.time);
+
+		return true;
 	}
 };
 
@@ -91,13 +101,16 @@ public:
 	Dielectric(float refractionIndex) : refractionIndex(refractionIndex) {}
 
 	bool scatter(
-		const Ray& rayIn, const HitRecord& record, Color& attenuation, Ray& scattered, float& PDF
+		const Ray& rayIn, const HitRecord& hitRec, ScatterRecord& scatterRec
 	) const override 
 	{
-		float refractionRatio = record.frontFace ? (1.0f / refractionIndex) : refractionIndex;
+		scatterRec.attenuation = Color(1.0f);
+		scatterRec.PDF = nullptr;
+		scatterRec.skipPdf = true;
+		float refractionRatio = hitRec.frontFace ? (1.0f / refractionIndex) : refractionIndex;
 
 		Vec3 unitDir = normalize(rayIn.dir);
-		float cosTheta = std::fmin(dot(-unitDir, record.normal), 1.0f);
+		float cosTheta = std::fmin(dot(-unitDir, hitRec.normal), 1.0f);
 		float sinTheta = std::sqrt(1.0f - cosTheta * cosTheta);
 
 		bool cannotRefract = refractionRatio * sinTheta > 1.0f;
@@ -105,15 +118,14 @@ public:
 
 		if (cannotRefract || reflectance(cosTheta, refractionRatio) > randomFloat()) 
 		{
-			direction = reflect(unitDir, record.normal);
+			direction = reflect(unitDir, hitRec.normal);
 		}
 		else 
 		{
-			direction = refract(unitDir, record.normal, refractionRatio);
+			direction = refract(unitDir, hitRec.normal, refractionRatio);
 		}
 
-		scattered = Ray(record.p, direction, rayIn.time);
-		attenuation = Color(1.0f);
+		scatterRec.skipPdfRay = Ray(hitRec.p, direction, rayIn.time);
 		return true;
 	}
 
@@ -155,12 +167,12 @@ public:
 	Isotropic(std::shared_ptr<Texture> tex) : tex(tex) {}
 
 	bool scatter(
-		const Ray& rayIn, const HitRecord& record, Color& attenuation, Ray& scattered, float& PDF
+		const Ray& rayIn, const HitRecord& hitRec, ScatterRecord& scatterRec
 	) const override
 	{
-		scattered = Ray(record.p, randomUnitVector(), rayIn.time);
-		attenuation = tex->value(record.u, record.v, record.p);
-		PDF = 1 / (4 * pi);
+		scatterRec.attenuation = tex->value(hitRec.u, hitRec.v, hitRec.p);
+		scatterRec.PDF = std::make_shared<SpherePDF>();
+		scatterRec.skipPdf = false;
 		return true;
 	}
 

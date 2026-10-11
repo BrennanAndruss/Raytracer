@@ -81,7 +81,7 @@ void bouncingSpheres() {
 	camera.defocusAngle = 0.6f;
 	camera.focusDist = 10.0f;
 
-	camera.render(world);
+	camera.render(world, HittableList());
 }
 
 void checkeredSpheres()
@@ -111,7 +111,7 @@ void checkeredSpheres()
 
 	camera.defocusAngle = 0;
 
-	camera.render(world);
+	camera.render(world, HittableList());
 }
 
 void earth()
@@ -135,7 +135,7 @@ void earth()
 
 	camera.defocusAngle = 0;
 
-	camera.render(HittableList(globe));
+	camera.render(HittableList(globe), HittableList());
 }
 
 void perlinSpheres()
@@ -161,7 +161,7 @@ void perlinSpheres()
 
 	camera.defocusAngle = 0;
 	
-	camera.render(world);
+	camera.render(world, HittableList());
 }
 
 void quads()
@@ -199,7 +199,7 @@ void quads()
 	camera.viewUp = Vec3(0.0f, 1.0f, 0.0f);
 	camera.defocusAngle = 0;
 
-	camera.render(world);
+	camera.render(world, HittableList());
 }
 
 void cornellBox()
@@ -224,23 +224,33 @@ void cornellBox()
 	world.add(std::make_shared<Quad>(Point3(0.0f, 0.0f, 555.0f), 
 		Vec3(555.0f, 0.0f, 0.0f), Vec3(0.0f, 555.0f, 0.0f), white));
 
-	std::shared_ptr<Hittable> box1 = box(Point3(0.0f, 0.0f, 0.0f), Point3(165.0f, 330.0f, 165.0f), white);
+	// std::shared_ptr<Material> aluminum = std::make_shared<Metal>(Color(0.8f, 0.85f, 0.88f), 0.0f);
+	// std::shared_ptr<Hittable> box1 = box(Point3(0.0f), Point3(165.0f, 330.0f, 165.0f), aluminum);
+	std::shared_ptr<Hittable> box1 = box(Point3(0.0f), Point3(165.0f, 330.0f, 165.0f), white);
 	box1 = std::make_shared<RotateY>(box1, 15.0f);
 	box1 = std::make_shared<Translate>(box1, Vec3(265.0f, 0.0f, 295.0f));
 	world.add(box1);
 
-	std::shared_ptr<Hittable> box2 = box(Point3(0.0f, 0.0f, 0.0f), Point3(165.0f, 165.0f, 165.0f), white);
-	box2 = std::make_shared<RotateY>(box2, -18.0f);
-	box2 = std::make_shared<Translate>(box2, Vec3(130.0f, 0.0f, 65.0f));
-	world.add(box2);
+	//std::shared_ptr<Hittable> box2 = box(Point3(0.0f), Point3(165.0f, 165.0f, 165.0f), white);
+	//box2 = std::make_shared<RotateY>(box2, -18.0f);
+	//box2 = std::make_shared<Translate>(box2, Vec3(130.0f, 0.0f, 65.0f));
+	//world.add(box2);
+
+	std::shared_ptr<Material> glass = std::make_shared<Dielectric>(1.5f);
+	world.add(std::make_shared<Sphere>(Point3(190.0f, 90.0f, 190.0f), 90.0f, glass));
+
+	auto emptyMat = std::shared_ptr<Material>();
+	HittableList lights;
+	lights.add(std::make_shared<Quad>(Point3(343.0f, 554.0f, 332.0f), Vec3(-130.0f, 0.0f, 0.0f), Vec3(0.0f, 0.0f, -105.0f), emptyMat));
+	lights.add(std::make_shared<Sphere>(Point3(190.0f, 90.0f, 190.0f), 90.0f, emptyMat));
 
 	Camera camera;
 
 	camera.aspectRatio = 1.0f;
-	camera.imageWidth = 1200;
-	camera.samplesPerPixel = 500;
+	camera.imageWidth = 600;
+	camera.samplesPerPixel = 1000;
 	camera.maxDepth = 50;
-	camera.background = Color(0.0f, 0.0f, 0.0f);
+	camera.background = Color(0.0f);
 
 	camera.vFov = 40.0f;
 	camera.lookFrom = Point3(278.0f, 278.0f, -800.0f);
@@ -249,7 +259,7 @@ void cornellBox()
 
 	camera.defocusAngle = 0.0f;
 
-	camera.render(world);
+	camera.render(world, lights);
 }
 
 void cornellSmoke()
@@ -299,7 +309,7 @@ void cornellSmoke()
 
 	camera.defocusAngle = 0.0f;
 
-	camera.render(world);
+	camera.render(world, HittableList());
 }
 
 void finalScene(int imageWidth, int samplesPerPixel, int maxDepth)
@@ -382,7 +392,7 @@ void finalScene(int imageWidth, int samplesPerPixel, int maxDepth)
 
 	cam.defocusAngle = 0.0f;
 
-	cam.render(world);
+	cam.render(world, HittableList());
 }
 
 int main(int argc, char* argv[])

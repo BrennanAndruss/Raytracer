@@ -3,6 +3,7 @@
 #include "aabb.h"
 #include "hittable.h"
 
+#include <cassert>
 #include <vector>
 
 class HittableList : public Hittable {
@@ -42,6 +43,8 @@ public:
 
 	float pdfValue(const Point3& origin, const Vec3& direction) const override
 	{
+		assert(!objects.empty() && "Hittable list is empty.");
+
 		float weight = 1.0f / objects.size();
 		float sum = 0.0f;
 
@@ -55,6 +58,8 @@ public:
 
 	Vec3 random(const Point3& origin) const override
 	{
+		assert(!objects.empty() && "Hittable list is empty.");
+
 		int size = static_cast<int>(objects.size());
 		return objects[randomInt(0, size - 1)]->random(origin);
 	}

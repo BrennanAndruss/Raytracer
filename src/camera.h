@@ -33,7 +33,7 @@ public:
 	float defocusAngle = 0.0f;
 	float focusDist = 1.0f;
 
-	void render(const Hittable& world, const Hittable& lights) 
+	void render(const Hittable& world, const HittableList& lights) 
 	{
 		initialize();
 
@@ -57,7 +57,7 @@ public:
 		for (int i = 0; i < tileQueue.size(); i++)
 		{
 			std::clog << "\rTiles remaining: " << (tileQueue.size() - i) << " " << std::flush;
-			renderTile(tileQueue[i], world);
+			renderTile(tileQueue[i], world, lights);
 		}
 
 #endif
@@ -175,7 +175,7 @@ private:
 	}
 
 	Color rayColor(
-		const Ray& ray, int depth, const Hittable& world, const Hittable& lights
+		const Ray& ray, int depth, const Hittable& world, const HittableList& lights
 	) const 
 	{
 		// If the ray bounce limit is exceeded, no more light is gathered
@@ -201,8 +201,19 @@ private:
 			return scatterRec.attenuation * rayColor(scatterRec.skipPdfRay, depth - 1, world, lights);
 		
 		// If the ray is scattered, recursively gather light from the new ray
-		auto lightPDF = std::make_shared<HittablePDF>(lights, hitRec.p);
-		MixturePDF mixedPDF(lightPDF, scatterRec.PDF);
+		std::vector<std::shared_ptr<PDF>> pdfs;
+		std::vector<float> weights;
+
+		if (!lights.objects.empty())
+		{
+			pdfs.push_back(std::make_shared<HittablePDF>(lights, hitRec.p));
+			weights.push_back(1.0f);
+		}
+
+		pdfs.push_back(scatterRec.PDF);
+		weights.push_back(1.0f);
+
+		MixturePDF mixedPDF(std::move(pdfs), std::move(weights));
 
 		Ray scattered = Ray(hitRec.p, mixedPDF.generate(), ray.time);
 		float pdfValue = mixedPDF.value(scattered.dir);
@@ -215,7 +226,7 @@ private:
 		return emissionColor + scatterColor;
 	}
 
-	void renderWorker(const Hittable& world, const Hittable& lights)
+	void renderWorker(const Hittable& world, const HittableList& lights)
 	{
 		// Continuously render the next tile from the queue
 		while (true)
@@ -234,7 +245,7 @@ private:
 		}
 	}
 
-	void renderTile(const Tile& tile, const Hittable& world, const Hittable& lights)
+	void renderTile(const Tile& tile, const Hittable& world, const HittableList& lights)
 	{
 		for (int j = tile.y0; j <= tile.y1; j++)
 		{

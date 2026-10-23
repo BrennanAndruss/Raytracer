@@ -335,11 +335,15 @@ void finalScene(int imageWidth, int samplesPerPixel, int maxDepth)
 	}
 
 	HittableList world;
+	HittableList lights;
 
 	world.add(std::make_shared<BVHNode>(boxes1));
 
 	auto light = std::make_shared<DiffuseLight>(Color(7.0f, 7.0f, 7.0f));
 	world.add(std::make_shared<Quad>(Point3(123.0f, 554.0f, 147.0f), Vec3(300.0f, 0.0f, 0.0f), Vec3(0.0f, 0.0f, 265.0f), light));
+
+	auto emptyMat = std::shared_ptr<Material>();
+	lights.add(std::make_shared<Quad>(Point3(123.0f, 554.0f, 147.0f), Vec3(300.0f, 0.0f, 0.0f), Vec3(0.0f, 0.0f, 265.0f), emptyMat));
 
 	auto center1 = Point3(400.0f, 400.0f, 200.0f);
 	auto center2 = center1 + Vec3(30.0f, 0.0f, 0.0f);
@@ -392,7 +396,7 @@ void finalScene(int imageWidth, int samplesPerPixel, int maxDepth)
 
 	cam.defocusAngle = 0.0f;
 
-	cam.render(world, HittableList());
+	cam.render(world, lights);
 }
 
 int main(int argc, char* argv[])
@@ -429,7 +433,7 @@ int main(int argc, char* argv[])
 	case 6: cornellBox(); break;
 	case 7: cornellSmoke(); break;
 	case 8: finalScene(800, 10000, 40); break;
-	default: finalScene(400, 250, 4); break;
+	default: finalScene(400, 50, 4); break;
 	}
 
 	auto end = std::chrono::high_resolution_clock::now();

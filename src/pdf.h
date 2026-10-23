@@ -74,25 +74,54 @@ private:
 class MixturePDF : public PDF
 {
 public:
-	MixturePDF(std::shared_ptr<PDF> p0, std::shared_ptr<PDF> p1)
+	MixturePDF(
+		std::vector<std::shared_ptr<PDF>> pdfs, std::vector<float> weights)
+		: p(std::move(pdfs)), weights(std::move(weights))
 	{
-		p[0] = p0;
-		p[1] = p1;
+		// TODO: input validation
+
+		float totalWeight = 0.0f;
+		for (int i = 0; i < p.size(); i++)
+		{
+			totalWeight += this->weights[i];
+		}
+
+		for (float& weight : this->weights)
+		{
+			weight /= totalWeight;
+		}
 	}
 
 	float value(const Vec3& direction) const override
 	{
-		return 0.5f * p[0]->value(direction) + 0.5f * p[1]->value(direction);
+		float result = 0.0f;
+		for (int i = 0; i < p.size(); i++)
+		{
+			result += weights[i] * p[i]->value(direction);
+		}
+		
+		return result;
 	}
 
 	Vec3 generate() const override
 	{
-		if (randomFloat() < 0.5f)
-			return p[0]->generate();
-		else
-			return p[1]->generate();
+		float r = randomFloat();
+		float cumulative = 0.0f;
+
+		for (size_t i = 0; i < p.size(); i++)
+		{
+			cumulative += weights[i];
+
+			if (r < cumulative)
+			{
+				return p[i]->generate();
+			}
+		}
+
+		return p.back()->generate();
 	}
 
 private:
-	std::shared_ptr<PDF> p[2];
+	std::vector<std::shared_ptr<PDF>> p;
+	std::vector<float> weights;
 };
